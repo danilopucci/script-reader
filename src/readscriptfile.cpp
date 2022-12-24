@@ -224,48 +224,39 @@ LABEL_3:
         }
         else if ( !std::isspace(v5) )
         {
-          v1 = 1;
-          if ( v6 != '#' )
+
+          if ( v6 == '#' )
+          {
+            v1 = 1;
+          }else if ( v6 == '@' )
           {
             v1 = 30;
-            if ( v6 != '@' )
-            {
-              if ( std::isalpha(v6) )
-              {
-                v1 = 2;
-                this->String[pos++] = v6;
-              }
-              else if ( std::isdigit(v6) )
-              {
-                this->Number = v6 - '0';
-                v1 = 3;
-              }
-              else
-              {
-                v1 = 6;
-                if ( v6 != '"' )
-                {
-                  v1 = 11;
-                  if ( v6 != '[' )
-                  {
-                    v1 = 22;
-                    if ( v6 != '<' )
-                    {
-                      v1 = 25;
-                      if ( v6 != '>' )
-                      {
-                        v1 = 27;
-                        if ( v6 != '-' )
-                        {
-                          v1 = 10;
-                          this->Special = v6;
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+          }else if ( std::isalpha(v6) )
+          {
+            v1 = 2;
+            this->String[pos++] = v6;
+
+          }else if ( std::isdigit(v6) )
+          {
+              this->Number = v6 - '0';
+              v1 = 3;
+          }else if(v6 == '"'){
+                  v1 = 6;
+
+          }else if(v6 == '['){
+              v1 = 11;
+          }else if ( v6 == '<' )
+          {
+              v1 = 22;
+          }else if ( v6 == '>' )
+          {
+              v1 = 25;
+          }else if ( v6 == '-' )
+          {
+              v1 = 27;
+          }else{
+              v1 = 10;
+              this->Special = v6;
           }
         }
         continue;
@@ -276,7 +267,6 @@ LABEL_3:
           if ( v9 == 10 )
           {
             ++this->Line[this->RecursionDepth];
-LABEL_33:
             v1 = 0;
           }
           continue;
@@ -298,8 +288,11 @@ LABEL_24:
           this->error("identifier too long");
         if ( v10 == -1 )
           goto LABEL_41;
-        if ( std::isalpha(v10) || std::isdigit(v11) || v11 == '_' )
-          goto LABEL_37;
+        if ( std::isalpha(v10) || std::isdigit(v11) || v11 == '_' ){
+            this->String[pos++] = v11;
+            continue;
+        }
+
         ungetc(v11, f);
 LABEL_41:
         this->Token = IDENTIFIER;
@@ -369,7 +362,6 @@ LABEL_46:
         {
           if ( v17 == 10 )
             ++this->Line[this->RecursionDepth];
-LABEL_37:
           this->String[pos++] = v11;
         }
         continue;
@@ -388,18 +380,20 @@ LABEL_37:
         this->Token = STRING;
         return;
       case 10:
-        goto LABEL_75;
+        this->Token = SPECIAL;
+        return;
       case 11:
         v19 = getc(f);
         this->Special = '[';
         v20 = v19;
-        if ( v19 == -1 )
-          goto LABEL_75;
+        if ( v19 == -1 ){
+            this->Token = SPECIAL;
+            return;
+        }
         if ( std::isdigit(v19) )
         {
           Sign = 1;
           this->Number = v20 - 48;
-LABEL_80:
           v1 = 12;
           continue;
         }
@@ -407,11 +401,11 @@ LABEL_80:
         {
           Sign = -1;
           this->Number = 0;
-          goto LABEL_80;
+          v1 = 12;
+          continue;
         }
 LABEL_81:
         ungetc(v20, f);
-LABEL_75:
         this->Token = SPECIAL;
         return;
       case 12:
@@ -493,50 +487,71 @@ LABEL_75:
         return;
       case 22:
         v28 = getc(f);
-        this->Special = 60;
+        this->Special = '<';
         v20 = v28;
-        if ( v28 == -1 )
-          goto LABEL_75;
+        if ( v28 == -1 ){
+            this->Token = SPECIAL;
+            return;
+        }
         v1 = 23;
-        if ( v28 != 61 )
+        if ( v28 != '=' )
         {
           v1 = 24;
-          if ( v28 != 62 )
-            goto LABEL_81;
+          if ( v28 != '>' ){
+              ungetc(v20, f);
+              this->Token = SPECIAL;
+              return;
+          }
         }
         continue;
       case 23:
-        this->Special = 76;
-        goto LABEL_75;
+        this->Special = 'L';
+        this->Token = SPECIAL;
+        return;
       case 24:
-        this->Special = 78;
-        goto LABEL_75;
+        this->Special = 'N';
+        this->Token = SPECIAL;
+        return;
       case 25:
         v29 = getc(f);
-        this->Special = 62;
+        this->Special = '>';;
         v20 = v29;
-        if ( v29 == -1 )
-          goto LABEL_75;
+        if ( v29 == -1 ){
+            this->Token = SPECIAL;
+            return;
+        }
         v1 = 26;
-        if ( v29 != 61 )
-          goto LABEL_81;
+        if ( v29 != 61 ){
+            ungetc(v20, f);
+            this->Token = SPECIAL;
+            return;
+        }
         continue;
+
       case 26:
-        this->Special = 71;
-        goto LABEL_75;
+        this->Special = 'G';
+        this->Token = SPECIAL;
+        return;
+
       case 27:
         v30 = getc(f);
-        this->Special = 45;
-        if ( v30 == -1 )
-          goto LABEL_75;
+        this->Special = '-';;
+        if ( v30 == -1 ){
+            this->Token = SPECIAL;
+            return;
+        }
         v1 = 28;
-        if ( v30 == 62 )
+        if ( v30 == '>' )
           continue;
         ungetc(v30, f);
-        goto LABEL_75;
+        this->Token = SPECIAL;
+        return;
+
       case 28:
-        this->Special = 73;
-        goto LABEL_75;
+        this->Special = 'I';
+        this->Token = SPECIAL;
+        return;
+
       case 30:
         v31 = getc(f);
         if ( v31 == -1 )
@@ -545,21 +560,27 @@ LABEL_75:
           this->error("syntax error");
         v1 = 31;
         continue;
+
       case 31:
         v32 = getc(f);
         v11 = v32;
         if ( v32 == -1 )
           this->error("unexpected end of file");
-        if ( v32 != 34 )
-          goto LABEL_37;
-        v1 = 32;
+        if ( v32 != 34 ){
+            this->String[pos++] = v11;
+        }else{
+            v1 = 32;
+        }
         continue;
+
       case 32:
         this->open( v33);
         goto LABEL_3;
+
       default:
         this->error("TReadScriptFile::nextToken: Ung");
-        goto LABEL_33;
+        v1 = 0;
+        continue;
     }
   }
 }
