@@ -222,7 +222,7 @@ LABEL_3:
         {
           ++this->Line[this->RecursionDepth];
         }
-        else if ( !(uint8_t)isSpace(v5) )
+        else if ( !std::isspace(v5) )
         {
           v1 = 1;
           if ( v6 != '#' )
@@ -230,12 +230,12 @@ LABEL_3:
             v1 = 30;
             if ( v6 != '@' )
             {
-              if ( (uint8_t)isAlpha(v6) )
+              if ( std::isalpha(v6) )
               {
                 v1 = 2;
                 this->String[pos++] = v6;
               }
-              else if ( isDigit(v6) )
+              else if ( std::isdigit(v6) )
               {
                 this->Number = v6 - '0';
                 v1 = 3;
@@ -298,7 +298,7 @@ LABEL_24:
           this->error("identifier too long");
         if ( v10 == -1 )
           goto LABEL_41;
-        if ( (uint8_t)isAlpha(v10) || isDigit(v11) || v11 == '_' )
+        if ( std::isalpha(v10) || std::isdigit(v11) || v11 == '_' )
           goto LABEL_37;
         ungetc(v11, f);
 LABEL_41:
@@ -309,7 +309,7 @@ LABEL_41:
         v13 = v12;
         if ( v12 == -1 )
           goto LABEL_48;
-        if ( isDigit(v12) )
+        if ( std::isdigit(v12) )
           goto LABEL_49;
         if ( v13 == 45 )
           goto LABEL_46;
@@ -322,7 +322,7 @@ LABEL_48:
         v15 = v14;
         if ( v14 == -1 )
           this->error("unexpected end of file");
-        if ( !isDigit(v14) )
+        if ( !std::isdigit(v14) )
           this->error("syntax error");
         v1 = 5;
         this->Number = v15 - 48;
@@ -332,7 +332,7 @@ LABEL_48:
         v13 = v16;
         if ( v16 == -1 )
           goto LABEL_57;
-        if ( isDigit(v16) )
+        if ( std::isdigit(v16) )
         {
 LABEL_49:
           this->Number = v13 + 10 * this->Number - 48;
@@ -395,7 +395,7 @@ LABEL_37:
         v20 = v19;
         if ( v19 == -1 )
           goto LABEL_75;
-        if ( isDigit(v19) )
+        if ( std::isdigit(v19) )
         {
           Sign = 1;
           this->Number = v20 - 48;
@@ -419,7 +419,7 @@ LABEL_75:
         v13 = v21;
         if ( v21 == -1 )
           this->error("unexpected end of file");
-        if ( isDigit(v21) )
+        if ( std::isdigit(v21) )
           goto LABEL_49;
         if ( v13 != 44 )
           this->error("syntax error");
@@ -431,7 +431,7 @@ LABEL_75:
         v23 = v22;
         if ( v22 == -1 )
           this->error("unexpected end of file");
-        if ( isDigit(v22) )
+        if ( std::isdigit(v22) )
         {
           Sign = 1;
           this->Number = v23 - 48;
@@ -450,7 +450,7 @@ LABEL_75:
         v13 = v24;
         if ( v24 == -1 )
           this->error("unexpected end of file");
-        if ( isDigit(v24) )
+        if ( std::isdigit(v24) )
           goto LABEL_49;
         if ( v13 != 44 )
           this->error("syntax error");
@@ -462,7 +462,7 @@ LABEL_75:
         v26 = v25;
         if ( v25 == -1 )
           this->error("unexpected end of file");
-        if ( isDigit(v25) )
+        if ( std::isdigit(v25) )
         {
           Sign = 1;
           this->Number = v26 - 48;
@@ -481,7 +481,7 @@ LABEL_75:
         v13 = v27;
         if ( v27 == -1 )
           this->error("unexpected end of file");
-        if ( isDigit(v27) )
+        if ( std::isdigit(v27) )
           goto LABEL_49;
         if ( v13 != 93 )
           this->error("syntax error");
@@ -619,7 +619,7 @@ void ReadScriptFile::error(const std::string &Text)
     v3 = v2 + 1;
   else
     v3 = this->Filename[this->RecursionDepth];
-  snprintf(ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", v3, this->Line[this->RecursionDepth], Text.c_str());
+  snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", v3, this->Line[this->RecursionDepth], Text.c_str());
   for (int i = this->RecursionDepth; i != -1; i = this->RecursionDepth )
   {
     if ( fclose(this->File[i]) )
@@ -667,41 +667,6 @@ char * strLower(char *a1)
     a1[v1++] = v5;
   }
   return a1;
-}
-
-int isSpace(int a1)
-{
-  int result; // eax
-
-  result = 0;
-  if ( a1 == 32 || a1 == 12 || a1 == 10 || a1 == 13 || a1 == 9 || a1 == 11 )
-    result = 1;
-  return result;
-}
-
-int isAlpha(int a1)
-{
-  int v1; // ecx
-
-  v1 = 0;
-  if ( (unsigned int)(a1 - 97) <= 25
-    || (unsigned int)(a1 - 65) <= 0x19
-    || a1 == 4294967268
-    || a1 == '\xF6'
-    || a1 == '\xFC'
-    || a1 == '\xC4'
-    || a1 == '\xD6'
-    || a1 == '\xDC'
-    || a1 == '\xDF' )
-  {
-    v1 = 1;
-  }
-  return v1;
-}
-
-bool isDigit(int c)
-{
-  return (unsigned int)(c - 48) <= 9;
 }
 
 char * findLast(char *s, char c)

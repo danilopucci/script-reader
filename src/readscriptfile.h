@@ -6,12 +6,9 @@
 #include <stdio.h>
 
 char * strLower(char *a1);
-int isSpace(int a1);
-int isAlpha(int a1);
-bool isDigit(int c);
 char * findLast(char *s, char c);
 
-char ErrorString[100];
+
 
 enum TOKEN{
     ENDOFFILE        = 0,
@@ -48,12 +45,12 @@ public:
     void error(const std::string &Text);
     void close();
 
-private:
+//private:
     TOKEN Token;
     char Special;
     int RecursionDepth;
     uint8_t* Bytes;
-    char* String;
+    char String[4000];
     int Number;
     int CoordX;
     int CoordY;
@@ -61,6 +58,7 @@ private:
     int Line[3];
     FILE* File[3];
     char Filename[3][4096];
+    char ErrorString[100];
 };
 
 
