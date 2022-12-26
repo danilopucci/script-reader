@@ -45,6 +45,9 @@ public:
     void error(const std::string &Text);
     void close();
 
+private:
+    void setToken(TOKEN token);
+public:
 //private:
     TOKEN Token;
     char Special;

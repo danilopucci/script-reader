@@ -184,7 +184,6 @@ void ReadScriptFile::nextToken()
   if ( this->RecursionDepth == -1 )
   {
     this->error("TReadScriptFile::nextToken: Kein Skript zum Lesen ge");
-LABEL_28:
     this->Token = ENDOFFILE;
     return;
   }
@@ -214,8 +213,18 @@ LABEL_3:
       case 0:
         v5 = getc(f);
         v6 = v5;
-        if ( v5 == -1 )
-          goto LABEL_24;
+        if ( v5 == -1 ){
+            if ( this->RecursionDepth <= 0 ){
+                this->setToken(ENDOFFILE);
+                return;
+            }
+            if ( fclose(this->File[this->RecursionDepth]) )
+            {
+                this->error("TReadScriptFile::close: Fehler %d beim Schlie");
+            }
+            --this->RecursionDepth;
+            goto LABEL_3;
+        }
         if ( v5 == 10 )
         {
           ++this->Line[this->RecursionDepth];
@@ -253,8 +262,9 @@ LABEL_3:
           {
               v1 = 27;
           }else{
-              v1 = 10;
               this->Special = v6;
+              this->setToken(SPECIAL);
+              return;
           }
         }
         continue;
@@ -269,11 +279,12 @@ LABEL_3:
           }
           continue;
         }
-LABEL_24:
-        v7 = this->RecursionDepth;
-        if ( v7 <= 0 )
-          goto LABEL_28;
-        if ( fclose(this->File[v7]) )
+
+        if ( this->RecursionDepth <= 0 ){
+            this->setToken(ENDOFFILE);
+            return;
+        }
+        if ( fclose(this->File[this->RecursionDepth]) )
         {
           this->error("TReadScriptFile::close: Fehler %d beim Schlie");
         }
@@ -284,28 +295,38 @@ LABEL_24:
         v11 = v10;
         if ( pos == 30 )
           this->error("identifier too long");
-        if ( v10 == -1 )
-          goto LABEL_41;
+        if ( v10 == -1 ){
+            this->setToken(IDENTIFIER);
+            return;
+        }
+
         if ( std::isalpha(v10) || std::isdigit(v11) || v11 == '_' ){
             this->String[pos++] = v11;
             continue;
         }
 
         ungetc(v11, f);
-LABEL_41:
-        this->Token = IDENTIFIER;
+        this->setToken(IDENTIFIER);
         return;
       case 3:
         v12 = getc(f);
         v13 = v12;
-        if ( v12 == -1 )
-          goto LABEL_48;
-        if ( std::isdigit(v12) )
-          goto LABEL_49;
-        if ( v13 == 45 )
-          goto LABEL_46;
+        if ( v12 == -1 ){
+            this->Token = NUMBER;
+            return;
+        }
+        if ( std::isdigit(v12) ){
+            this->Number = v13 + 10 * this->Number - 48;
+            continue;
+        }
+
+        if ( v13 == 45 ){
+            this->Bytes[pos++] = this->Number;
+            v1 = 4;
+            continue;
+        }
         ungetc(v13, f);
-LABEL_48:
+
         this->Token = NUMBER;
         return;
       case 4:
@@ -321,11 +342,14 @@ LABEL_48:
       case 5:
         v16 = getc(f);
         v13 = v16;
-        if ( v16 == -1 )
-          goto LABEL_57;
+        if ( v16 == -1 ){
+            this->Bytes[pos] = this->Number;
+            this->Token = BYTES;
+            return;
+        }
+
         if ( std::isdigit(v16) )
         {
-LABEL_49:
           this->Number = v13 + 10 * this->Number - 48;
         }
         else
@@ -333,12 +357,12 @@ LABEL_49:
           if ( v13 != 45 )
           {
             ungetc(v13, f);
-LABEL_57:
+
             this->Bytes[pos] = this->Number;
             this->Token = BYTES;
             return;
           }
-LABEL_46:
+
           this->Bytes[pos++] = this->Number;
           v1 = 4;
         }
@@ -350,7 +374,8 @@ LABEL_46:
           this->error("unexpected end of file");
         if ( v17 == '"' )
         {
-          v1 = 8;
+          this->setToken(STRING);
+          return;
         }
         else if ( v17 == '\\' )
         {
@@ -374,12 +399,7 @@ LABEL_46:
         ++pos;
         v1 = 6;
         continue;
-      case 8:
-        this->Token = STRING;
-        return;
-      case 10:
-        this->Token = SPECIAL;
-        return;
+
       case 11:
         v19 = getc(f);
         this->Special = '[';
@@ -402,7 +422,7 @@ LABEL_46:
           v1 = 12;
           continue;
         }
-LABEL_81:
+
         ungetc(v20, f);
         this->Token = SPECIAL;
         return;
@@ -411,8 +431,11 @@ LABEL_81:
         v13 = v21;
         if ( v21 == -1 )
           this->error("unexpected end of file");
-        if ( std::isdigit(v21) )
-          goto LABEL_49;
+        if ( std::isdigit(v21) ){
+            this->Number = v13 + 10 * this->Number - 48;
+            continue;
+        }
+
         if ( v13 != 44 )
           this->error("syntax error");
         v1 = 13;
@@ -442,8 +465,11 @@ LABEL_81:
         v13 = v24;
         if ( v24 == -1 )
           this->error("unexpected end of file");
-        if ( std::isdigit(v24) )
-          goto LABEL_49;
+        if ( std::isdigit(v24) ){
+            this->Number = v13 + 10 * this->Number - 48;
+            continue;
+        }
+
         if ( v13 != 44 )
           this->error("syntax error");
         v1 = 15;
@@ -473,16 +499,18 @@ LABEL_81:
         v13 = v27;
         if ( v27 == -1 )
           this->error("unexpected end of file");
-        if ( std::isdigit(v27) )
-          goto LABEL_49;
+        if ( std::isdigit(v27) ){
+            this->Number = v13 + 10 * this->Number - 48;
+            continue;
+        }
+
         if ( v13 != 93 )
           this->error("syntax error");
-        v1 = 17;
+
         this->CoordZ = this->Number * Sign;
-        continue;
-      case 17:
-        this->Token = COORDINATE;
+        this->setToken(COORDINATE);
         return;
+
       case 22:
         v28 = getc(f);
         this->Special = '<';
@@ -491,25 +519,24 @@ LABEL_81:
             this->Token = SPECIAL;
             return;
         }
-        v1 = 23;
+
         if ( v28 != '=' )
         {
-          v1 = 24;
           if ( v28 != '>' ){
               ungetc(v20, f);
               this->Token = SPECIAL;
               return;
           }
+          this->Special = 'N';
+          this->setToken(SPECIAL);
+          return;
+        }else{
+            this->Special = 'L';
+            this->setToken(SPECIAL);
+            return;
         }
         continue;
-      case 23:
-        this->Special = 'L';
-        this->Token = SPECIAL;
-        return;
-      case 24:
-        this->Special = 'N';
-        this->Token = SPECIAL;
-        return;
+
       case 25:
         v29 = getc(f);
         this->Special = '>';;
@@ -518,17 +545,14 @@ LABEL_81:
             this->Token = SPECIAL;
             return;
         }
-        v1 = 26;
+
         if ( v29 != 61 ){
             ungetc(v20, f);
             this->Token = SPECIAL;
             return;
         }
-        continue;
-
-      case 26:
         this->Special = 'G';
-        this->Token = SPECIAL;
+        this->setToken(SPECIAL);
         return;
 
       case 27:
@@ -538,17 +562,17 @@ LABEL_81:
             this->Token = SPECIAL;
             return;
         }
-        v1 = 28;
-        if ( v30 == '>' )
-          continue;
+
+        if ( v30 == '>' ){
+            this->Special = 'I';
+            this->setToken(SPECIAL);
+            return;
+        }
+
         ungetc(v30, f);
         this->Token = SPECIAL;
         return;
 
-      case 28:
-        this->Special = 'I';
-        this->Token = SPECIAL;
-        return;
 
       case 30:
         v31 = getc(f);
@@ -581,6 +605,11 @@ LABEL_81:
         continue;
     }
   }
+}
+
+void ReadScriptFile::setToken(TOKEN token)
+{
+    this->Token = token;
 }
 
 char* ReadScriptFile::getString()
