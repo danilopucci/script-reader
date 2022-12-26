@@ -61,6 +61,8 @@ private:
     bool retrieveCoordinateSignZ(FILE* f);
     bool retrieveCoordinateZ(FILE* f);
 
+    int getNextChar(FILE* f);
+
 public:
 //private:
     TOKEN Token;

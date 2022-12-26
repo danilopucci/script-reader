@@ -231,12 +231,9 @@ bool ReadScriptFile::retrieveCoordinateSignX(FILE* f)
 
 bool ReadScriptFile::retrieveCoordinateX(FILE* f)
 {
-    int c = getc(f);
-    int tmp = c;
-    if ( c == -1 )
-      this->error("unexpected end of file");
+    int tmp = this->getNextChar(f);
 
-    if ( std::isdigit(c) ){
+    if ( std::isdigit(tmp) ){
         this->Number = tmp + 10 * this->Number - 48;
         return true;
     }
@@ -250,12 +247,9 @@ bool ReadScriptFile::retrieveCoordinateX(FILE* f)
 
 bool ReadScriptFile::retrieveCoordinateSignY(FILE* f)
 {
-    int c = getc(f);
-    int tmp = c;
-    if ( c == -1 )
-      this->error("unexpected end of file");
+    int tmp = this->getNextChar(f);
 
-    if ( std::isdigit(c) )
+    if ( std::isdigit(tmp) )
     {
       Sign = 1;
       this->Number = tmp - 48;
@@ -273,12 +267,9 @@ bool ReadScriptFile::retrieveCoordinateSignY(FILE* f)
 
 bool ReadScriptFile::retrieveCoordinateY(FILE *f)
 {
-    int c = getc(f);
-    int tmp = c;
-    if ( c == -1 )
-      this->error("unexpected end of file");
+    int tmp = this->getNextChar(f);
 
-    if ( std::isdigit(c) ){
+    if ( std::isdigit(tmp) ){
         this->Number = tmp + 10 * this->Number - 48;
         return true;
     }
@@ -292,13 +283,9 @@ bool ReadScriptFile::retrieveCoordinateY(FILE *f)
 
 bool ReadScriptFile::retrieveCoordinateSignZ(FILE* f)
 {
-    int c = getc(f);
-    int tmp = c;
+    int tmp = this->getNextChar(f);
 
-    if ( c == -1 )
-      this->error("unexpected end of file");
-
-    if ( std::isdigit(c) )
+    if ( std::isdigit(tmp) )
     {
       Sign = 1;
       this->Number = tmp - 48;
@@ -315,12 +302,9 @@ bool ReadScriptFile::retrieveCoordinateSignZ(FILE* f)
 
 bool ReadScriptFile::retrieveCoordinateZ(FILE* f)
 {
-    int c = getc(f);
-    int tmp = c;
-    if ( c == -1 )
-      this->error("unexpected end of file");
+    int tmp = this->getNextChar(f);
 
-    if ( std::isdigit(c) ){
+    if ( std::isdigit(tmp) ){
         this->Number = tmp + 10 * this->Number - 48;
         return true;
     }
@@ -331,6 +315,16 @@ bool ReadScriptFile::retrieveCoordinateZ(FILE* f)
     this->CoordZ = this->Number * Sign;
     this->setToken(COORDINATE);
     return false;
+}
+
+int ReadScriptFile::getNextChar(FILE* f)
+{
+    int c = getc(f);
+
+    if ( c == -1 )
+      this->error("unexpected end of file");
+
+    return c;
 }
 
 void ReadScriptFile::nextToken()
@@ -344,16 +338,16 @@ void ReadScriptFile::nextToken()
   int v7; // eax
   int v9; // eax
   int v10; // eax
-  int v11; // edi
+
   int v12; // eax
-  int v13; // edi
+
   int v14; // eax
-  int v15; // edi
+
   int v16; // eax
   int v17; // eax
   int v18; // eax
   int v19; // eax
-  int v20; // edi
+
   int v28; // eax
   int v29; // eax
   int v30; // eax
@@ -481,38 +475,37 @@ LABEL_3:
 
       case 3:
         v12 = getc(f);
-        v13 = v12;
+
         if ( v12 == -1 ){
             this->Token = NUMBER;
             return;
         }
         if ( std::isdigit(v12) ){
-            this->Number = v13 + 10 * this->Number - 48;
+            this->Number = v12 + 10 * this->Number - 48;
             continue;
         }
 
-        if ( v13 == 45 ){
+        if ( v12 == 45 ){
             this->Bytes[pos++] = this->Number;
             v1 = 4;
             continue;
         }
-        ungetc(v13, f);
+        ungetc(v12, f);
 
         this->Token = NUMBER;
         return;
       case 4:
-        v14 = getc(f);
-        v15 = v14;
-        if ( v14 == -1 )
-          this->error("unexpected end of file");
+        v14 = this->getNextChar(f);
+
         if ( !std::isdigit(v14) )
           this->error("syntax error");
+
         v1 = 5;
-        this->Number = v15 - 48;
+        this->Number = v14 - 48;
         continue;
       case 5:
         v16 = getc(f);
-        v13 = v16;
+
         if ( v16 == -1 ){
             this->Bytes[pos] = this->Number;
             this->Token = BYTES;
@@ -521,13 +514,13 @@ LABEL_3:
 
         if ( std::isdigit(v16) )
         {
-          this->Number = v13 + 10 * this->Number - 48;
+          this->Number = v16 + 10 * this->Number - 48;
         }
         else
         {
-          if ( v13 != 45 )
+          if ( v16 != 45 )
           {
-            ungetc(v13, f);
+            ungetc(v16, f);
 
             this->Bytes[pos] = this->Number;
             this->Token = BYTES;
@@ -539,10 +532,8 @@ LABEL_3:
         }
         continue;
       case 6:
-        v17 = getc(f);
-        v11 = v17;
-        if ( v17 == -1 )
-          this->error("unexpected end of file");
+        v17 = this->getNextChar(f);
+
         if ( v17 == '"' )
         {
           this->setToken(STRING);
@@ -556,13 +547,12 @@ LABEL_3:
         {
           if ( v17 == 10 )
             ++this->Line[this->RecursionDepth];
-          this->String[pos++] = v11;
+          this->String[pos++] = v17;
         }
         continue;
       case 7:
-        v18 = getc(f);
-        if ( v18 == -1 )
-          this->error("unexpected end of file");
+        v18 = this->getNextChar(f);
+
         if ( v18 == 110 )
           this->String[pos] = 10;
         else
@@ -609,7 +599,7 @@ LABEL_3:
       case 22:
         v28 = getc(f);
         this->Special = '<';
-        v20 = v28;
+
         if ( v28 == -1 ){
             this->Token = SPECIAL;
             return;
@@ -618,7 +608,7 @@ LABEL_3:
         if ( v28 != '=' )
         {
           if ( v28 != '>' ){
-              ungetc(v20, f);
+              ungetc(v28, f);
               this->Token = SPECIAL;
               return;
           }
@@ -635,14 +625,14 @@ LABEL_3:
       case 25:
         v29 = getc(f);
         this->Special = '>';
-        v20 = v29;
+
         if ( v29 == -1 ){
             this->Token = SPECIAL;
             return;
         }
 
         if ( v29 != '=' ){
-            ungetc(v20, f);
+            ungetc(v29, f);
             this->Token = SPECIAL;
             return;
         }
@@ -670,21 +660,18 @@ LABEL_3:
 
 
       case 30:
-        v31 = getc(f);
-        if ( v31 == -1 )
-          this->error("unexpected end of file");
+        v31 = this->getNextChar(f);
+
         if ( v31 != 34 )
           this->error("syntax error");
         v1 = 31;
         continue;
 
       case 31:
-        v32 = getc(f);
-        v11 = v32;
-        if ( v32 == -1 )
-          this->error("unexpected end of file");
+        v32 = this->getNextChar(f);
+
         if ( v32 != 34 ){
-            this->String[pos++] = v11;
+            this->String[pos++] = v32;
         }else{
             v1 = 32;
         }
