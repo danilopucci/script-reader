@@ -6,6 +6,9 @@ ReadScriptFile::ReadScriptFile()
 {
     this->RecursionDepth = -1;
     this->Bytes = reinterpret_cast<uint8_t*>(this->String);
+
+    this->pos = 0;
+    this->Sign = 1;
 }
 
 ReadScriptFile::~ReadScriptFile()
@@ -142,6 +145,194 @@ LABEL_9:
   this->Line[v6] = 1;
 }
 
+bool ReadScriptFile::retrieveIdentifier(FILE* f)
+{
+    int tmp = 0;
+    int c = 0;
+    c = getc(f);
+    tmp = c;
+
+    if ( pos == 30 )
+      this->error("identifier too long");
+    if ( c == -1 ){
+        this->setToken(IDENTIFIER);
+        return false;
+    }
+
+    if ( std::isalpha(tmp) || std::isdigit(tmp) || tmp == '_' ){
+        this->String[pos++] = tmp;
+        return true;
+    }
+
+    ungetc(tmp, f);
+    this->setToken(IDENTIFIER);
+    return false;
+}
+
+bool ReadScriptFile::retrieveNumber(FILE* f)
+{
+    /*int tmp = 0;
+    int c = 0;
+    c = getc(f);
+    v13 = c;
+    if ( c == -1 ){
+        this->Token = NUMBER;
+        return;
+    }
+    if ( std::isdigit(v12) ){
+        this->Number = v13 + 10 * this->Number - 48;
+        continue;
+    }
+
+    if ( v13 == 45 ){
+        this->Bytes[pos++] = this->Number;
+        v1 = 4;
+        continue;
+    }
+    ungetc(v13, f);
+
+    this->Token = NUMBER;
+    return;*/
+}
+
+bool ReadScriptFile::retrieveCoordinate(FILE* f)
+{
+
+}
+
+bool ReadScriptFile::retrieveCoordinateSignX(FILE* f)
+{
+    int c = getc(f);
+    int tmp = c;
+
+    this->Special = '[';
+
+    if ( c == -1 ){
+        this->Token = SPECIAL;
+        return false;
+    }
+    if ( std::isdigit(c) )
+    {
+      Sign = 1;
+      this->Number = tmp - 48;
+      return true;
+    }
+    if ( tmp == '-' )
+    {
+      Sign = -1;
+      this->Number = 0;
+      return true;
+    }
+
+    ungetc(tmp, f);
+    this->Token = SPECIAL;
+    return false;
+}
+
+bool ReadScriptFile::retrieveCoordinateX(FILE* f)
+{
+    int c = getc(f);
+    int tmp = c;
+    if ( c == -1 )
+      this->error("unexpected end of file");
+
+    if ( std::isdigit(c) ){
+        this->Number = tmp + 10 * this->Number - 48;
+        return true;
+    }
+
+    if ( tmp != ',' )
+      this->error("syntax error");
+
+    this->CoordX = this->Number * Sign;
+    return false;
+}
+
+bool ReadScriptFile::retrieveCoordinateSignY(FILE* f)
+{
+    int c = getc(f);
+    int tmp = c;
+    if ( c == -1 )
+      this->error("unexpected end of file");
+
+    if ( std::isdigit(c) )
+    {
+      Sign = 1;
+      this->Number = tmp - 48;
+    }
+    else
+    {
+      if ( tmp != 45 )
+        this->error("syntax error");
+
+      Sign = -1;
+      this->Number = 0;
+    }
+    return true;
+}
+
+bool ReadScriptFile::retrieveCoordinateY(FILE *f)
+{
+    int c = getc(f);
+    int tmp = c;
+    if ( c == -1 )
+      this->error("unexpected end of file");
+
+    if ( std::isdigit(c) ){
+        this->Number = tmp + 10 * this->Number - 48;
+        return true;
+    }
+
+    if ( tmp != ',' )
+      this->error("syntax error");
+
+    this->CoordY = this->Number * Sign;
+    return false;
+}
+
+bool ReadScriptFile::retrieveCoordinateSignZ(FILE* f)
+{
+    int c = getc(f);
+    int tmp = c;
+
+    if ( c == -1 )
+      this->error("unexpected end of file");
+
+    if ( std::isdigit(c) )
+    {
+      Sign = 1;
+      this->Number = tmp - 48;
+    }
+    else
+    {
+      if ( tmp != '-' )
+          this->error("syntax error");
+      Sign = -1;
+      this->Number = 0;
+    }
+    return true;
+}
+
+bool ReadScriptFile::retrieveCoordinateZ(FILE* f)
+{
+    int c = getc(f);
+    int tmp = c;
+    if ( c == -1 )
+      this->error("unexpected end of file");
+
+    if ( std::isdigit(c) ){
+        this->Number = tmp + 10 * this->Number - 48;
+        return true;
+    }
+
+    if ( tmp != ']' )
+      this->error("syntax error");
+
+    this->CoordZ = this->Number * Sign;
+    this->setToken(COORDINATE);
+    return false;
+}
+
 void ReadScriptFile::nextToken()
 {
   int v1; // esi
@@ -151,7 +342,6 @@ void ReadScriptFile::nextToken()
   int v5; // eax
   int v6; // edi
   int v7; // eax
-  int *v8; // eax
   int v9; // eax
   int v10; // eax
   int v11; // edi
@@ -164,22 +354,14 @@ void ReadScriptFile::nextToken()
   int v18; // eax
   int v19; // eax
   int v20; // edi
-  int v21; // eax
-  int v22; // eax
-  int v23; // edi
-  int v24; // eax
-  int v25; // eax
-  int v26; // edi
-  int v27; // eax
   int v28; // eax
   int v29; // eax
   int v30; // eax
   int v31; // eax
   int v32; // eax
   char *v33; // [esp+1Ch] [ebp-1Ch]
-  int Sign; // [esp+20h] [ebp-18h]
+
   FILE *f; // [esp+24h] [ebp-14h]
-  int pos; // [esp+28h] [ebp-10h]
 
   if ( this->RecursionDepth == -1 )
   {
@@ -291,23 +473,12 @@ LABEL_3:
         --this->RecursionDepth;
         goto LABEL_3;
       case 2:
-        v10 = getc(f);
-        v11 = v10;
-        if ( pos == 30 )
-          this->error("identifier too long");
-        if ( v10 == -1 ){
-            this->setToken(IDENTIFIER);
+
+        if(!this->retrieveIdentifier(f)){
             return;
         }
+        continue;
 
-        if ( std::isalpha(v10) || std::isdigit(v11) || v11 == '_' ){
-            this->String[pos++] = v11;
-            continue;
-        }
-
-        ungetc(v11, f);
-        this->setToken(IDENTIFIER);
-        return;
       case 3:
         v12 = getc(f);
         v13 = v12;
@@ -401,115 +572,39 @@ LABEL_3:
         continue;
 
       case 11:
-        v19 = getc(f);
-        this->Special = '[';
-        v20 = v19;
-        if ( v19 == -1 ){
-            this->Token = SPECIAL;
+        if(!this->retrieveCoordinateSignX(f)){
             return;
         }
-        if ( std::isdigit(v19) )
-        {
-          Sign = 1;
-          this->Number = v20 - 48;
-          v1 = 12;
-          continue;
-        }
-        if ( v20 == 45 )
-        {
-          Sign = -1;
-          this->Number = 0;
-          v1 = 12;
-          continue;
-        }
-
-        ungetc(v20, f);
-        this->Token = SPECIAL;
-        return;
-      case 12:
-        v21 = getc(f);
-        v13 = v21;
-        if ( v21 == -1 )
-          this->error("unexpected end of file");
-        if ( std::isdigit(v21) ){
-            this->Number = v13 + 10 * this->Number - 48;
-            continue;
-        }
-
-        if ( v13 != 44 )
-          this->error("syntax error");
-        v1 = 13;
-        this->CoordX = this->Number * Sign;
+        v1 = 12;
         continue;
+
+      case 12:
+        if(!this->retrieveCoordinateX(f)){
+            v1 = 13;
+        }
+        continue;
+
       case 13:
-        v22 = getc(f);
-        v23 = v22;
-        if ( v22 == -1 )
-          this->error("unexpected end of file");
-        if ( std::isdigit(v22) )
-        {
-          Sign = 1;
-          this->Number = v23 - 48;
-        }
-        else
-        {
-          if ( v23 != 45 )
-            this->error("syntax error");
-          Sign = -1;
-          this->Number = 0;
-        }
+        this->retrieveCoordinateSignY(f);
         v1 = 14;
         continue;
-      case 14:
-        v24 = getc(f);
-        v13 = v24;
-        if ( v24 == -1 )
-          this->error("unexpected end of file");
-        if ( std::isdigit(v24) ){
-            this->Number = v13 + 10 * this->Number - 48;
-            continue;
-        }
 
-        if ( v13 != 44 )
-          this->error("syntax error");
-        v1 = 15;
-        this->CoordY = this->Number * Sign;
+      case 14:
+        if(!this->retrieveCoordinateY(f)){
+            v1 = 15;
+        }
         continue;
+
       case 15:
-        v25 = getc(f);
-        v26 = v25;
-        if ( v25 == -1 )
-          this->error("unexpected end of file");
-        if ( std::isdigit(v25) )
-        {
-          Sign = 1;
-          this->Number = v26 - 48;
-        }
-        else
-        {
-          if ( v26 != 45 )
-            this->error("syntax error");
-          Sign = -1;
-          this->Number = 0;
-        }
+        this->retrieveCoordinateSignZ(f);
         v1 = 16;
         continue;
+
       case 16:
-        v27 = getc(f);
-        v13 = v27;
-        if ( v27 == -1 )
-          this->error("unexpected end of file");
-        if ( std::isdigit(v27) ){
-            this->Number = v13 + 10 * this->Number - 48;
-            continue;
+        if(!this->retrieveCoordinateZ(f)){
+            return;
         }
-
-        if ( v13 != 93 )
-          this->error("syntax error");
-
-        this->CoordZ = this->Number * Sign;
-        this->setToken(COORDINATE);
-        return;
+        continue;
 
       case 22:
         v28 = getc(f);
@@ -539,14 +634,14 @@ LABEL_3:
 
       case 25:
         v29 = getc(f);
-        this->Special = '>';;
+        this->Special = '>';
         v20 = v29;
         if ( v29 == -1 ){
             this->Token = SPECIAL;
             return;
         }
 
-        if ( v29 != 61 ){
+        if ( v29 != '=' ){
             ungetc(v20, f);
             this->Token = SPECIAL;
             return;

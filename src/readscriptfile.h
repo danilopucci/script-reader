@@ -47,6 +47,20 @@ public:
 
 private:
     void setToken(TOKEN token);
+    bool retrieveIdentifier(FILE* f);
+    bool retrieveNumber(FILE* f);
+
+    bool retrieveCoordinate(FILE* f);
+
+    bool retrieveCoordinateSignX(FILE* f);
+    bool retrieveCoordinateX(FILE* f);
+
+    bool retrieveCoordinateSignY(FILE* f);
+    bool retrieveCoordinateY(FILE* f);
+
+    bool retrieveCoordinateSignZ(FILE* f);
+    bool retrieveCoordinateZ(FILE* f);
+
 public:
 //private:
     TOKEN Token;
@@ -62,6 +76,9 @@ public:
     FILE* File[3];
     char Filename[3][4096];
     char ErrorString[100];
+
+    int pos;
+    int Sign;
 };
 
 
