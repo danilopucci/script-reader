@@ -63,6 +63,8 @@ private:
 
     int getNextChar(FILE* f);
 
+    void internalClose(int fileIndex = 0);
+
 public:
 //private:
     TOKEN Token;

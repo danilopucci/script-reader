@@ -18,11 +18,7 @@ ReadScriptFile::~ReadScriptFile()
     error("TReadScriptFile::~TReadScriptFile: Datei ist noch offen.\n");
     for (int i = this->RecursionDepth; i != -1; i = this->RecursionDepth )
     {
-      if ( fclose(this->File[i]) )
-      {
-        this->error("TReadScriptFile::close: Fehler %d beim Schlie");
-      }
-      --this->RecursionDepth;
+        this->internalClose(i);
     }
   }
 }
@@ -333,7 +329,7 @@ void ReadScriptFile::nextToken()
   char *v2; // edi
   unsigned int v3; // eax
   int v4; // eax
-  int v5; // eax
+
   int v6; // edi
   int v7; // eax
   int v9; // eax
@@ -387,25 +383,20 @@ LABEL_3:
     switch ( v1 )
     {
       case 0:
-        v5 = getc(f);
-        v6 = v5;
-        if ( v5 == -1 ){
+        v6 = getc(f);
+        if ( v6 == -1 ){
             if ( this->RecursionDepth <= 0 ){
                 this->setToken(ENDOFFILE);
                 return;
             }
-            if ( fclose(this->File[this->RecursionDepth]) )
-            {
-                this->error("TReadScriptFile::close: Fehler %d beim Schlie");
-            }
-            --this->RecursionDepth;
+            this->internalClose();
             goto LABEL_3;
         }
-        if ( v5 == 10 )
+        if ( v6 == 10 )
         {
           ++this->Line[this->RecursionDepth];
         }
-        else if ( !std::isspace(v5) )
+        else if ( !std::isspace(v6) )
         {
 
           if ( v6 == '#' )
@@ -460,11 +451,7 @@ LABEL_3:
             this->setToken(ENDOFFILE);
             return;
         }
-        if ( fclose(this->File[this->RecursionDepth]) )
-        {
-          this->error("TReadScriptFile::close: Fehler %d beim Schlie");
-        }
-        --this->RecursionDepth;
+        this->internalClose();
         goto LABEL_3;
       case 2:
 
@@ -481,11 +468,11 @@ LABEL_3:
             return;
         }
         if ( std::isdigit(v12) ){
-            this->Number = v12 + 10 * this->Number - 48;
+            this->Number = v12 + 10 * this->Number - '0';
             continue;
         }
 
-        if ( v12 == 45 ){
+        if ( v12 == '-' ){
             this->Bytes[pos++] = this->Number;
             v1 = 4;
             continue;
@@ -760,6 +747,17 @@ void ReadScriptFile::error(const std::string &Text)
   }
 }
 
+void ReadScriptFile::internalClose(int fileIndex)
+{
+    int index = fileIndex ? fileIndex : this->RecursionDepth;
+
+    if ( fclose(this->File[index]) )
+    {
+      this->error("TReadScriptFile::close: Fehler %d beim Schlie");
+    }
+    --this->RecursionDepth;
+}
+
 void ReadScriptFile::close()
 {
   int v1; // eax
@@ -771,11 +769,7 @@ void ReadScriptFile::close()
   }
   else
   {
-    if ( fclose(this->File[v1]) )
-    {
-      error("TReadScriptFile::close: Fehler %d beim Schlie");
-    }
-    --this->RecursionDepth;
+    this->internalClose(v1);
   }
 }
 
