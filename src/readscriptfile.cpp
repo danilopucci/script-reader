@@ -100,7 +100,6 @@ uint8_t* ReadScriptFile::readBytesequence(void)
 
 void ReadScriptFile::open(char *FileName)
 {
-  int v2; // eax
   char *v3; // eax
   int v4; // edi
   FILE *v5; // eax
@@ -108,17 +107,16 @@ void ReadScriptFile::open(char *FileName)
   int v7; // edi
   char *v8; // eax
 
-  v2 = this->RecursionDepth + 1;
-  this->RecursionDepth = v2;
-  if ( v2 == 3 )
+  this->RecursionDepth += 1;
+  if ( this->RecursionDepth == 3 )
   {
     this->error("TReadScriptFile::open: Rekursionstiefe zu gro");
     this->error("Recursion depth too high");
   }
 LABEL_9:
-  if ( v2 <= 0
-    || *FileName == '/'
-    || (strcpy(this->Filename[this->RecursionDepth], (const char *)this + 4096 * v2 - 4080),
+  if ( this->RecursionDepth <= 0 || *FileName == '/'
+
+    || (strcpy(this->Filename[this->RecursionDepth], this->Filename[this->RecursionDepth-1]),
         (v3 = findLast(this->Filename[this->RecursionDepth], 47)) == 0) )
   {
     strcpy(this->Filename[this->RecursionDepth], FileName);
