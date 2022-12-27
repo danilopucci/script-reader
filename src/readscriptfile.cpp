@@ -460,8 +460,9 @@ LABEL_3:
             goto LABEL_3;
         }else if ( std::isalpha(v6) )
         {
-            v1 = 2;
             this->String[pos++] = v6;
+            while(this->retrieveIdentifier(f)){}
+            return;
 
         }else if ( std::isdigit(v6) )
         {
@@ -528,12 +529,6 @@ LABEL_3:
         }
         this->internalClose();
         goto LABEL_3;
-      case 2:
-
-        if(!this->retrieveIdentifier(f)){
-            return;
-        }
-        continue;
 
       case 3:
         v12 = getc(f);
@@ -595,10 +590,6 @@ LABEL_3:
           v1 = 4;
         }
         continue;
-
-//      case 32:
-//        this->open( this->String);
-//        goto LABEL_3;
 
       default:
         this->error("TReadScriptFile::nextToken: Ung");
