@@ -55,6 +55,9 @@ private:
     bool retrieveCoordinateSign(FILE* f);
     bool retrieveCoordinateByAxis(FILE* f, int &value);
 
+    bool retrieveRelationalOperator(FILE* f);
+    bool retrieveSeparator(FILE* f);
+
     int getNextChar(FILE* f);
     bool getNextSpecial(FILE *f, int &c);
 

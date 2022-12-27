@@ -243,6 +243,71 @@ bool ReadScriptFile::retrieveCoordinateByAxis(FILE* f, int &value)
     return false;
 }
 
+bool ReadScriptFile::retrieveRelationalOperator(FILE* f)
+{
+    int c = 0;
+    if ( this->Special == '<' )
+    {
+        if(!this->getNextSpecial(f, c)){
+            return false;
+        }
+
+        if ( c == '=' )
+        {
+            this->Special = 'L';
+            this->setToken(SPECIAL);
+            return false;
+
+        }else{
+            if ( c != '>' ){
+                ungetc(c, f);
+                this->Token = SPECIAL;
+                return false;
+            }
+
+            this->Special = 'N';
+            this->setToken(SPECIAL);
+            return false;
+        }
+    }
+    else if ( this->Special == '>' )
+    {
+        if(!this->getNextSpecial(f, c)){
+            return false;
+        }
+
+        if ( c == '=' ){
+            this->Special = 'G';
+            this->setToken(SPECIAL);
+            return false;
+        }
+        else{
+            ungetc(c, f);
+            this->Token = SPECIAL;
+            return false;
+        }
+    }
+    return false;
+}
+
+bool ReadScriptFile::retrieveSeparator(FILE* f)
+{
+    int c = 0;
+    if(!this->getNextSpecial(f, c)){
+        return false;
+    }
+
+    if ( c == '>' ){
+        this->Special = 'I';
+        this->setToken(SPECIAL);
+        return true;
+    }
+
+    ungetc(c, f);
+    this->Token = SPECIAL;
+    return false;
+}
+
 int ReadScriptFile::getNextChar(FILE* f)
 {
     int c = getc(f);
@@ -375,18 +440,19 @@ LABEL_3:
             this->retrieveCoordinate(f);
             return;
 
-        }else if ( v6 == '<' )
+        }else if ( v6 == '<' || v6 == '>')
         {
-            this->Special = '<';
-            v1 = 22;
-        }else if ( v6 == '>' )
-        {
-            this->Special = '>';
-            v1 = 25;
+            this->Special = v6;
+            if(!this->retrieveRelationalOperator(f)){
+                return;
+            }
+
         }else if ( v6 == '-' )
         {
             this->Special = '-';
             v1 = 27;
+            this->retrieveSeparator(f);
+            return;
         }else{
             this->Special = v6;
             this->setToken(SPECIAL);
@@ -508,57 +574,6 @@ LABEL_3:
         ++pos;
         v1 = 6;
         continue;
-
-      case 22:
-        if(!this->getNextSpecial(f, v28)){
-            return;
-        }
-
-        if ( v28 != '=' )
-        {
-          if ( v28 != '>' ){
-              ungetc(v28, f);
-              this->Token = SPECIAL;
-              return;
-          }
-          this->Special = 'N';
-          this->setToken(SPECIAL);
-          return;
-        }else{
-            this->Special = 'L';
-            this->setToken(SPECIAL);
-            return;
-        }
-        continue;
-
-      case 25:
-        if(!this->getNextSpecial(f, v29)){
-            return;
-        }
-
-        if ( v29 != '=' ){
-            ungetc(v29, f);
-            this->Token = SPECIAL;
-            return;
-        }
-        this->Special = 'G';
-        this->setToken(SPECIAL);
-        return;
-
-      case 27:
-        if(!this->getNextSpecial(f, v30)){
-            return;
-        }
-
-        if ( v30 == '>' ){
-            this->Special = 'I';
-            this->setToken(SPECIAL);
-            return;
-        }
-
-        ungetc(v30, f);
-        this->Token = SPECIAL;
-        return;
 
 
       case 30:
