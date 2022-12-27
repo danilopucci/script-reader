@@ -285,8 +285,6 @@ void ReadScriptFile::nextToken()
   int v29; // eax
   int v30; // eax
   int v31; // eax
-  int v32; // eax
-  char *v33; // [esp+1Ch] [ebp-1Ch]
 
   FILE *f; // [esp+24h] [ebp-14h]
 
@@ -296,14 +294,13 @@ void ReadScriptFile::nextToken()
     this->Token = ENDOFFILE;
     return;
   }
-  v33 = this->String;
 LABEL_3:
 
   int v1 = 0;
   char * v2 = this->String;
   unsigned int  v3 = 4000;
 
-  if ( ((uint64_t)v33 & 4) != 0 )
+  if ( ((uint64_t)this->String & 4) != 0 )
   {
     v2 = &this->String[4];
     v3 = 3996;
@@ -336,65 +333,66 @@ LABEL_3:
         {
           ++this->Line[this->RecursionDepth];
         }
-        else if ( !std::isspace(v6) )
-        {
+        if(std::isspace(v6)){
+            continue;
+        }
 
-          if ( v6 == '#' )
-          {
+        if ( v6 == '#' )
+        {
             v1 = 1;
-          }else if ( v6 == '@' )
-          {
+        }else if ( v6 == '@' )
+        {
             v1 = 30;
-          }else if ( std::isalpha(v6) )
-          {
+        }else if ( std::isalpha(v6) )
+        {
             v1 = 2;
             this->String[pos++] = v6;
 
-          }else if ( std::isdigit(v6) )
-          {
-              this->Number = v6 - '0';
-              v1 = 3;
-          }else if(v6 == '"'){
-                  v1 = 6;
+        }else if ( std::isdigit(v6) )
+        {
+            this->Number = v6 - '0';
+            v1 = 3;
+        }else if(v6 == '"'){
+            v1 = 6;
 
-          }else if(v6 == '['){
+        }else if(v6 == '['){
 
-              this->Special = '[';
-              v18 = getc(f);
+            this->Special = '[';
+            v18 = getc(f);
 
-              if ( v18 == -1 ){
-                  this->Token = SPECIAL;
-                  return;
-              }
+            if ( v18 == -1 ){
+                this->Token = SPECIAL;
+                return;
+            }
 
-              ungetc(v18, f);
-              if(!std::isdigit(v18) && v18 != '-'){
+            ungetc(v18, f);
+            if(!std::isdigit(v18) && v18 != '-'){
 
-                  this->Token = SPECIAL;
-                  return;
-              }
+                this->Token = SPECIAL;
+                return;
+            }
 
-              this->retrieveCoordinate(f);
-              return;
+            this->retrieveCoordinate(f);
+            return;
 
-          }else if ( v6 == '<' )
-          {
-              this->Special = '<';
-              v1 = 22;
-          }else if ( v6 == '>' )
-          {
-              this->Special = '>';
-              v1 = 25;
-          }else if ( v6 == '-' )
-          {
-              this->Special = '-';
-              v1 = 27;
-          }else{
-              this->Special = v6;
-              this->setToken(SPECIAL);
-              return;
-          }
+        }else if ( v6 == '<' )
+        {
+            this->Special = '<';
+            v1 = 22;
+        }else if ( v6 == '>' )
+        {
+            this->Special = '>';
+            v1 = 25;
+        }else if ( v6 == '-' )
+        {
+            this->Special = '-';
+            v1 = 27;
+        }else{
+            this->Special = v6;
+            this->setToken(SPECIAL);
+            return;
         }
+
         continue;
       case 1:
         v9 = getc(f);
@@ -511,9 +509,6 @@ LABEL_3:
         v1 = 6;
         continue;
 
-      case 11:
-
-
       case 22:
         if(!this->getNextSpecial(f, v28)){
             return;
@@ -575,17 +570,17 @@ LABEL_3:
         continue;
 
       case 31:
-        v32 = this->getNextChar(f);
+        v31 = this->getNextChar(f);
 
-        if ( v32 != 34 ){
-            this->String[pos++] = v32;
+        if ( v31 != 34 ){
+            this->String[pos++] = v31;
         }else{
             v1 = 32;
         }
         continue;
 
       case 32:
-        this->open( v33);
+        this->open( this->String);
         goto LABEL_3;
 
       default:
