@@ -308,6 +308,36 @@ bool ReadScriptFile::retrieveSeparator(FILE* f)
     return false;
 }
 
+bool ReadScriptFile::retrieveString(FILE* f)
+{
+    int c = this->getNextChar(f);
+
+    if ( c == '"' )
+    {
+        this->setToken(STRING);
+        return false;
+    }
+    else if ( c == '\\' )
+    {
+        c = this->getNextChar(f);
+
+        if ( c == 110 )
+            this->String[pos] = 10;
+        else
+            this->String[pos] = c;
+
+        ++pos;
+    }
+    else
+    {
+        if ( c == 10 )
+            ++this->Line[this->RecursionDepth];
+        this->String[pos++] = c;
+    }
+    return true;
+
+}
+
 int ReadScriptFile::getNextChar(FILE* f)
 {
     int c = getc(f);
@@ -418,7 +448,8 @@ LABEL_3:
             this->Number = v6 - '0';
             v1 = 3;
         }else if(v6 == '"'){
-            v1 = 6;
+            while(this->retrieveString(f)){}
+            return;
 
         }else if(v6 == '['){
 
@@ -450,7 +481,6 @@ LABEL_3:
         }else if ( v6 == '-' )
         {
             this->Special = '-';
-            v1 = 27;
             this->retrieveSeparator(f);
             return;
         }else{
@@ -544,35 +574,6 @@ LABEL_3:
           this->Bytes[pos++] = this->Number;
           v1 = 4;
         }
-        continue;
-      case 6:
-        v17 = this->getNextChar(f);
-
-        if ( v17 == '"' )
-        {
-          this->setToken(STRING);
-          return;
-        }
-        else if ( v17 == '\\' )
-        {
-          v1 = 7;
-        }
-        else
-        {
-          if ( v17 == 10 )
-            ++this->Line[this->RecursionDepth];
-          this->String[pos++] = v17;
-        }
-        continue;
-      case 7:
-        v18 = this->getNextChar(f);
-
-        if ( v18 == 110 )
-          this->String[pos] = 10;
-        else
-          this->String[pos] = v18;
-        ++pos;
-        v1 = 6;
         continue;
 
 

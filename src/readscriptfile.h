@@ -57,6 +57,7 @@ private:
 
     bool retrieveRelationalOperator(FILE* f);
     bool retrieveSeparator(FILE* f);
+    bool retrieveString(FILE* f);
 
     int getNextChar(FILE* f);
     bool getNextSpecial(FILE *f, int &c);
