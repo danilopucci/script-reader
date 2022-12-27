@@ -52,16 +52,11 @@ private:
 
     bool retrieveCoordinate(FILE* f);
 
-    bool retrieveCoordinateSignX(FILE* f);
-    bool retrieveCoordinateX(FILE* f);
-
-    bool retrieveCoordinateSignY(FILE* f);
-    bool retrieveCoordinateY(FILE* f);
-
-    bool retrieveCoordinateSignZ(FILE* f);
-    bool retrieveCoordinateZ(FILE* f);
+    bool retrieveCoordinateSign(FILE* f);
+    bool retrieveCoordinateByAxis(FILE* f, int &value);
 
     int getNextChar(FILE* f);
+    bool getNextSpecial(FILE *f, int &c);
 
     void internalClose(int fileIndex = 0);
 

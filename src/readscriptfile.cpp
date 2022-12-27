@@ -193,66 +193,31 @@ bool ReadScriptFile::retrieveNumber(FILE* f)
 
 bool ReadScriptFile::retrieveCoordinate(FILE* f)
 {
+    this->retrieveCoordinateSign(f);
+    while(this->retrieveCoordinateByAxis(f, this->CoordX)) {}
 
+    this->retrieveCoordinateSign(f);
+    while(this->retrieveCoordinateByAxis(f, this->CoordY)) {}
+
+    this->retrieveCoordinateSign(f);
+    while(this->retrieveCoordinateByAxis(f, this->CoordZ)) {}
+
+    this->setToken(COORDINATE);
+    return true;
 }
 
-bool ReadScriptFile::retrieveCoordinateSignX(FILE* f)
-{
-    int c = getc(f);
-    int tmp = c;
-
-    this->Special = '[';
-
-    if ( c == -1 ){
-        this->Token = SPECIAL;
-        return false;
-    }
-    if ( std::isdigit(c) )
-    {
-      Sign = 1;
-      this->Number = tmp - 48;
-      return true;
-    }
-    if ( tmp == '-' )
-    {
-      Sign = -1;
-      this->Number = 0;
-      return true;
-    }
-
-    ungetc(tmp, f);
-    this->Token = SPECIAL;
-    return false;
-}
-
-bool ReadScriptFile::retrieveCoordinateX(FILE* f)
-{
-    int tmp = this->getNextChar(f);
-
-    if ( std::isdigit(tmp) ){
-        this->Number = tmp + 10 * this->Number - 48;
-        return true;
-    }
-
-    if ( tmp != ',' )
-      this->error("syntax error");
-
-    this->CoordX = this->Number * Sign;
-    return false;
-}
-
-bool ReadScriptFile::retrieveCoordinateSignY(FILE* f)
+bool ReadScriptFile::retrieveCoordinateSign(FILE* f)
 {
     int tmp = this->getNextChar(f);
 
     if ( std::isdigit(tmp) )
     {
       Sign = 1;
-      this->Number = tmp - 48;
+      this->Number = tmp - '0';
     }
     else
     {
-      if ( tmp != 45 )
+      if ( tmp != '-' )
         this->error("syntax error");
 
       Sign = -1;
@@ -261,55 +226,20 @@ bool ReadScriptFile::retrieveCoordinateSignY(FILE* f)
     return true;
 }
 
-bool ReadScriptFile::retrieveCoordinateY(FILE *f)
+bool ReadScriptFile::retrieveCoordinateByAxis(FILE* f, int &value)
 {
     int tmp = this->getNextChar(f);
 
     if ( std::isdigit(tmp) ){
-        this->Number = tmp + 10 * this->Number - 48;
+        this->Number = tmp + 10 * this->Number - '0';
         return true;
     }
 
-    if ( tmp != ',' )
+    if ( tmp != ',' && tmp != ']')
       this->error("syntax error");
 
-    this->CoordY = this->Number * Sign;
-    return false;
-}
 
-bool ReadScriptFile::retrieveCoordinateSignZ(FILE* f)
-{
-    int tmp = this->getNextChar(f);
-
-    if ( std::isdigit(tmp) )
-    {
-      Sign = 1;
-      this->Number = tmp - 48;
-    }
-    else
-    {
-      if ( tmp != '-' )
-          this->error("syntax error");
-      Sign = -1;
-      this->Number = 0;
-    }
-    return true;
-}
-
-bool ReadScriptFile::retrieveCoordinateZ(FILE* f)
-{
-    int tmp = this->getNextChar(f);
-
-    if ( std::isdigit(tmp) ){
-        this->Number = tmp + 10 * this->Number - 48;
-        return true;
-    }
-
-    if ( tmp != ']' )
-      this->error("syntax error");
-
-    this->CoordZ = this->Number * Sign;
-    this->setToken(COORDINATE);
+    value = this->Number * Sign;
     return false;
 }
 
@@ -323,13 +253,20 @@ int ReadScriptFile::getNextChar(FILE* f)
     return c;
 }
 
+bool ReadScriptFile::getNextSpecial(FILE *f, int &c)
+{
+    c = getc(f);
+
+    if ( c == -1 ){
+        this->Token = SPECIAL;
+        return false;
+    }
+
+    return true;
+}
+
 void ReadScriptFile::nextToken()
 {
-  int v1; // esi
-  char *v2; // edi
-  unsigned int v3; // eax
-  int v4; // eax
-
   int v6; // edi
   int v7; // eax
   int v9; // eax
@@ -361,10 +298,11 @@ void ReadScriptFile::nextToken()
   }
   v33 = this->String;
 LABEL_3:
-  pos = 0;
-  v1 = 0;
-  v2 = this->String;
-  v3 = 4000;
+
+  int v1 = 0;
+  char * v2 = this->String;
+  unsigned int  v3 = 4000;
+
   if ( ((uint64_t)v33 & 4) != 0 )
   {
     v2 = &this->String[4];
@@ -372,10 +310,12 @@ LABEL_3:
     *this->String = 0;
   }
   memset(v2, 0, 4 * (v3 >> 2));
-  v4 = this->RecursionDepth;
+
   this->Number = 0;
-  Sign = 1;
-  f = this->File[v4];
+  this->Sign = 1;
+  this->pos = 0;
+
+  f = this->File[this->RecursionDepth];
   while ( 2 )
   {
     if ( pos == 3999 )
@@ -418,15 +358,36 @@ LABEL_3:
                   v1 = 6;
 
           }else if(v6 == '['){
-              v1 = 11;
+
+              this->Special = '[';
+              v18 = getc(f);
+
+              if ( v18 == -1 ){
+                  this->Token = SPECIAL;
+                  return;
+              }
+
+              ungetc(v18, f);
+              if(!std::isdigit(v18) && v18 != '-'){
+
+                  this->Token = SPECIAL;
+                  return;
+              }
+
+              this->retrieveCoordinate(f);
+              return;
+
           }else if ( v6 == '<' )
           {
+              this->Special = '<';
               v1 = 22;
           }else if ( v6 == '>' )
           {
+              this->Special = '>';
               v1 = 25;
           }else if ( v6 == '-' )
           {
+              this->Special = '-';
               v1 = 27;
           }else{
               this->Special = v6;
@@ -487,8 +448,10 @@ LABEL_3:
         if ( !std::isdigit(v14) )
           this->error("syntax error");
 
-        v1 = 5;
+
         this->Number = v14 - 48;
+
+        v1 = 5;
         continue;
       case 5:
         v16 = getc(f);
@@ -549,46 +512,10 @@ LABEL_3:
         continue;
 
       case 11:
-        if(!this->retrieveCoordinateSignX(f)){
-            return;
-        }
-        v1 = 12;
-        continue;
 
-      case 12:
-        if(!this->retrieveCoordinateX(f)){
-            v1 = 13;
-        }
-        continue;
-
-      case 13:
-        this->retrieveCoordinateSignY(f);
-        v1 = 14;
-        continue;
-
-      case 14:
-        if(!this->retrieveCoordinateY(f)){
-            v1 = 15;
-        }
-        continue;
-
-      case 15:
-        this->retrieveCoordinateSignZ(f);
-        v1 = 16;
-        continue;
-
-      case 16:
-        if(!this->retrieveCoordinateZ(f)){
-            return;
-        }
-        continue;
 
       case 22:
-        v28 = getc(f);
-        this->Special = '<';
-
-        if ( v28 == -1 ){
-            this->Token = SPECIAL;
+        if(!this->getNextSpecial(f, v28)){
             return;
         }
 
@@ -610,11 +537,7 @@ LABEL_3:
         continue;
 
       case 25:
-        v29 = getc(f);
-        this->Special = '>';
-
-        if ( v29 == -1 ){
-            this->Token = SPECIAL;
+        if(!this->getNextSpecial(f, v29)){
             return;
         }
 
@@ -628,10 +551,7 @@ LABEL_3:
         return;
 
       case 27:
-        v30 = getc(f);
-        this->Special = '-';;
-        if ( v30 == -1 ){
-            this->Token = SPECIAL;
+        if(!this->getNextSpecial(f, v30)){
             return;
         }
 
