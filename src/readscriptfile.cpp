@@ -338,6 +338,24 @@ bool ReadScriptFile::retrieveString(FILE* f)
 
 }
 
+bool ReadScriptFile::retrieveFilename(FILE* f)
+{
+    int c = this->getNextChar(f);
+
+    if ( c != '"' )
+        this->error("syntax error");
+
+
+    do{
+        c = this->getNextChar(f);
+
+        if ( c != '"' ){
+            this->String[pos++] = c;
+        }
+    }while(c != '"');
+    return true;
+}
+
 int ReadScriptFile::getNextChar(FILE* f)
 {
     int c = getc(f);
@@ -437,7 +455,9 @@ LABEL_3:
             v1 = 1;
         }else if ( v6 == '@' )
         {
-            v1 = 30;
+            this->retrieveFilename(f);
+            this->open( this->String);
+            goto LABEL_3;
         }else if ( std::isalpha(v6) )
         {
             v1 = 2;
@@ -576,28 +596,9 @@ LABEL_3:
         }
         continue;
 
-
-      case 30:
-        v31 = this->getNextChar(f);
-
-        if ( v31 != 34 )
-          this->error("syntax error");
-        v1 = 31;
-        continue;
-
-      case 31:
-        v31 = this->getNextChar(f);
-
-        if ( v31 != 34 ){
-            this->String[pos++] = v31;
-        }else{
-            v1 = 32;
-        }
-        continue;
-
-      case 32:
-        this->open( this->String);
-        goto LABEL_3;
+//      case 32:
+//        this->open( this->String);
+//        goto LABEL_3;
 
       default:
         this->error("TReadScriptFile::nextToken: Ung");
