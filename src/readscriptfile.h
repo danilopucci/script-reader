@@ -3,9 +3,10 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 #include <stdio.h>
 
-char * strLower(char *a1);
+std::string strLower(std::string a1);
 char * findLast(char *s, char c);
 
 
@@ -28,18 +29,18 @@ public:
     ~ReadScriptFile();
 
     void readSymbol(char);
-    char * readString();
+    std::string readString();
     char readSpecial();
     int readNumber();
-    char *readIdentifier(void);
+    std::string readIdentifier(void);
     void readCoordinate(int &x, int &y, int &z);
     uint8_t *readBytesequence(void);
-    void open(char *);
+    void open(const std::string &fileNameStr);
     void nextToken();
-    char *getString();
+    std::string getString();
     uint8_t getSpecial();
     int getNumber();
-    char *getIdentifier();
+    std::string getIdentifier();
     void getCoordinate(int &x, int &y, int &z);
     uint8_t *getBytesequence();
     void error(const std::string &Text);
@@ -65,13 +66,14 @@ private:
 
     void internalClose(int fileIndex = 0);
 
+    int getChar(FILE* f);
 public:
 //private:
     TOKEN Token;
     char Special;
     int RecursionDepth;
-    uint8_t* Bytes;
-    char String[4000];
+    std::vector<uint8_t> Bytes;
+    std::string String;
     int Number;
     int CoordX;
     int CoordY;

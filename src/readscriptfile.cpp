@@ -1,11 +1,14 @@
 #include "readscriptfile.h"
 #include <string.h>
 #include <stdio.h>
+#include <cctype>
 
 ReadScriptFile::ReadScriptFile()
 {
     this->RecursionDepth = -1;
-    this->Bytes = reinterpret_cast<uint8_t*>(this->String);
+
+    this->Bytes.reserve(4);
+    this->String.reserve(4000);
 
     this->pos = 0;
     this->Sign = 1;
@@ -23,6 +26,12 @@ ReadScriptFile::~ReadScriptFile()
   }
 }
 
+int ReadScriptFile::getChar(FILE *f)
+{
+//    this->lastReadChar = getc(f);
+//    return this->lastReadChar;
+    return getc(f);
+}
 
 void ReadScriptFile::readSymbol(char Symbol)
 {
@@ -33,7 +42,7 @@ void ReadScriptFile::readSymbol(char Symbol)
     this->error("special-char expected");
 }
 
-char* ReadScriptFile::readString()
+std::string ReadScriptFile::readString()
 {
   this->nextToken();
   if ( this->Token != STRING )
@@ -70,13 +79,13 @@ int ReadScriptFile::readNumber()
   return this->Number * v2;
 }
 
-char* ReadScriptFile::readIdentifier(void)
+std::string ReadScriptFile::readIdentifier(void)
 {
   this->nextToken();
   if ( this->Token != IDENTIFIER )
     this->error("identifier expected");
-  strLower(this->String);
-  return this->String;
+
+  return strLower(this->String);
 }
 
 void ReadScriptFile::readCoordinate(int &x,int &y,int &z)
@@ -94,11 +103,12 @@ uint8_t* ReadScriptFile::readBytesequence(void)
   this->nextToken();
   if ( this->Token != BYTES )
     this->error("byte-sequence expected");
-  return this->Bytes;
+  return this->Bytes.data();
 }
 
-void ReadScriptFile::open(char *FileName)
+void ReadScriptFile::open(const std::string& fileNameStr)
 {
+  const char *FileName = fileNameStr.c_str();
   char *v3; // eax
   int v4; // edi
   FILE *v5; // eax
@@ -145,7 +155,7 @@ bool ReadScriptFile::retrieveIdentifier(FILE* f)
 {
     int tmp = 0;
     int c = 0;
-    c = getc(f);
+    c = this->getChar(f);
     tmp = c;
 
     if ( pos == 30 )
@@ -156,7 +166,7 @@ bool ReadScriptFile::retrieveIdentifier(FILE* f)
     }
 
     if ( std::isalpha(tmp) || std::isdigit(tmp) || tmp == '_' ){
-        this->String[pos++] = tmp;
+        this->String.push_back(tmp);
         return true;
     }
 
@@ -321,10 +331,11 @@ bool ReadScriptFile::retrieveString(FILE* f)
     {
         c = this->getNextChar(f);
 
-        if ( c == 110 )
-            this->String[pos] = 10;
-        else
-            this->String[pos] = c;
+        if ( c == 110 ){
+            this->String.push_back(10);
+        }else{
+            this->String.push_back(c);
+        }
 
         ++pos;
     }
@@ -332,7 +343,7 @@ bool ReadScriptFile::retrieveString(FILE* f)
     {
         if ( c == 10 )
             ++this->Line[this->RecursionDepth];
-        this->String[pos++] = c;
+        this->String.push_back(c);
     }
     return true;
 
@@ -350,7 +361,7 @@ bool ReadScriptFile::retrieveFilename(FILE* f)
         c = this->getNextChar(f);
 
         if ( c != '"' ){
-            this->String[pos++] = c;
+            this->String.push_back(c);
         }
     }while(c != '"');
     return true;
@@ -358,7 +369,7 @@ bool ReadScriptFile::retrieveFilename(FILE* f)
 
 int ReadScriptFile::getNextChar(FILE* f)
 {
-    int c = getc(f);
+    int c = this->getChar(f);
 
     if ( c == -1 )
       this->error("unexpected end of file");
@@ -368,7 +379,7 @@ int ReadScriptFile::getNextChar(FILE* f)
 
 bool ReadScriptFile::getNextSpecial(FILE *f, int &c)
 {
-    c = getc(f);
+    c = this->getChar(f);
 
     if ( c == -1 ){
         this->Token = SPECIAL;
@@ -410,20 +421,12 @@ void ReadScriptFile::nextToken()
 LABEL_3:
 
   int v1 = 0;
-  char * v2 = this->String;
-  unsigned int  v3 = 4000;
-
-  if ( ((uint64_t)this->String & 4) != 0 )
-  {
-    v2 = &this->String[4];
-    v3 = 3996;
-    *this->String = 0;
-  }
-  memset(v2, 0, 4 * (v3 >> 2));
 
   this->Number = 0;
   this->Sign = 1;
   this->pos = 0;
+  this->Bytes.clear();
+  this->String.clear();
 
   f = this->File[this->RecursionDepth];
   while ( 2 )
@@ -433,7 +436,7 @@ LABEL_3:
     switch ( v1 )
     {
       case 0:
-        v6 = getc(f);
+        v6 = this->getChar(f);
         if ( v6 == -1 ){
             if ( this->RecursionDepth <= 0 ){
                 this->setToken(ENDOFFILE);
@@ -456,11 +459,11 @@ LABEL_3:
         }else if ( v6 == '@' )
         {
             this->retrieveFilename(f);
-            this->open( this->String);
+            this->open(this->String);
             goto LABEL_3;
         }else if ( std::isalpha(v6) )
         {
-            this->String[pos++] = v6;
+            this->String.push_back(v6);
             while(this->retrieveIdentifier(f)){}
             return;
 
@@ -475,7 +478,7 @@ LABEL_3:
         }else if(v6 == '['){
 
             this->Special = '[';
-            v18 = getc(f);
+            v18 = this->getChar(f);
 
             if ( v18 == -1 ){
                 this->Token = SPECIAL;
@@ -543,7 +546,7 @@ LABEL_3:
         }
 
         if ( v12 == '-' ){
-            this->Bytes[pos++] = this->Number;
+            this->Bytes.emplace_back(this->Number);
             v1 = 4;
             continue;
         }
@@ -563,10 +566,10 @@ LABEL_3:
         v1 = 5;
         continue;
       case 5:
-        v16 = getc(f);
+        v16 = this->getChar(f);
 
         if ( v16 == -1 ){
-            this->Bytes[pos] = this->Number;
+            this->Bytes.emplace_back(this->Number);
             this->Token = BYTES;
             return;
         }
@@ -581,12 +584,12 @@ LABEL_3:
           {
             ungetc(v16, f);
 
-            this->Bytes[pos] = this->Number;
+            this->Bytes.emplace_back(this->Number);
             this->Token = BYTES;
             return;
           }
 
-          this->Bytes[pos++] = this->Number;
+          this->Bytes.emplace_back(this->Number);
           v1 = 4;
         }
         continue;
@@ -604,7 +607,7 @@ void ReadScriptFile::setToken(TOKEN token)
     this->Token = token;
 }
 
-char* ReadScriptFile::getString()
+std::string ReadScriptFile::getString()
 {
   if ( this->Token != STRING )
     this->error("string expected");
@@ -625,12 +628,11 @@ int ReadScriptFile::getNumber()
   return this->Number;
 }
 
-char* ReadScriptFile::getIdentifier()
+std::string ReadScriptFile::getIdentifier()
 {
   if ( this->Token != IDENTIFIER )
     this->error("identifier expected");
-  strLower(this->String);
-  return this->String;
+  return strLower(this->String);
 }
 
 void ReadScriptFile::getCoordinate(int &x,int &y,int &z)
@@ -646,7 +648,7 @@ uint8_t* ReadScriptFile::getBytesequence()
 {
   if ( this->Token != BYTES )
     this->error("byte-sequence expected");
-  return this->Bytes;
+  return this->Bytes.data();
 }
 
 void ReadScriptFile::error(const std::string &Text)
@@ -696,24 +698,15 @@ void ReadScriptFile::close()
   }
 }
 
-char * strLower(char *a1)
+std::string strLower(std::string a1)
 {
-  int v1; // esi
-  char i; // al
-  char v3; // dl
-  unsigned int v4; // eax
-  char v5; // cl
+    std::string lowerStr = a1;
 
-  v1 = 0;
-  for ( i = *a1; i; i = a1[v1] )
-  {
-    v3 = i;
-    v4 = i - 65;
-    if ( v4 <= 0x19 || (v5 = v3, (uint8_t)(v4 - 127) <= 0x1Eu) )
-      v5 = v3 + 32;
-    a1[v1++] = v5;
-  }
-  return a1;
+    for(auto it = lowerStr.begin(); it != lowerStr.end(); it++){
+        *it = std::tolower(*it);
+    }
+
+    return lowerStr;
 }
 
 char * findLast(char *s, char c)
