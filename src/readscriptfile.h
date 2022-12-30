@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <stdio.h>
+#include <fstream>
 
 std::string strLower(std::string a1);
 char * findLast(char *s, char c);
@@ -45,6 +46,7 @@ public:
     uint8_t *getBytesequence();
     void error(const std::string &Text);
     void close();
+    void closeAll();
 
 private:
     void setToken(TOKEN token);
@@ -67,6 +69,7 @@ private:
     void internalClose(int fileIndex = 0);
 
     int getChar(FILE* f);
+    void ungetChar(int c, FILE* f);
 public:
 //private:
     TOKEN Token;
@@ -79,12 +82,13 @@ public:
     int CoordY;
     int CoordZ;
     int Line[3];
-    FILE* File[3];
     char Filename[3][4096];
     char ErrorString[100];
 
     int pos;
     int Sign;
+
+    std::fstream* Files[3];
 };
 
 

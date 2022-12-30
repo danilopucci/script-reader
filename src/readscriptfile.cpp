@@ -28,9 +28,12 @@ ReadScriptFile::~ReadScriptFile()
 
 int ReadScriptFile::getChar(FILE *f)
 {
-//    this->lastReadChar = getc(f);
-//    return this->lastReadChar;
-    return getc(f);
+    return this->Files[this->RecursionDepth]->get();
+}
+
+void ReadScriptFile::ungetChar(int c, FILE* f)
+{
+    this->Files[this->RecursionDepth]->unget();
 }
 
 void ReadScriptFile::readSymbol(char Symbol)
@@ -110,11 +113,6 @@ void ReadScriptFile::open(const std::string& fileNameStr)
 {
   const char *FileName = fileNameStr.c_str();
   char *v3; // eax
-  int v4; // edi
-  FILE *v5; // eax
-  int v6; // ebx
-  int v7; // edi
-  char *v8; // eax
 
   this->RecursionDepth += 1;
   if ( this->RecursionDepth == 3 )
@@ -134,21 +132,20 @@ LABEL_9:
   {
     strcpy(v3 + 1, FileName);
   }
-  v4 = this->RecursionDepth;
-  v5 = fopen(this->Filename[v4], "rb");
-  v6 = this->RecursionDepth;
-  this->File[v4] = v5;
-  if ( !this->File[v6] )
+
+  this->Files[this->RecursionDepth] = new std::fstream(this->Filename[this->RecursionDepth], std::ios_base::in | std::ios_base::binary);
+
+  if ( !this->Files[this->RecursionDepth] )
   {
     this->error("TReadScriptFile::open: Rekursionstiefe zu gro");
-    this->error(this->Filename[v6]);
+    this->error(this->Filename[this->RecursionDepth]);
 
     --this->RecursionDepth;
 
     this->error("Cannot open script-file");
     goto LABEL_9;
   }
-  this->Line[v6] = 1;
+  this->Line[this->RecursionDepth] = 1;
 }
 
 bool ReadScriptFile::retrieveIdentifier(FILE* f)
@@ -170,7 +167,7 @@ bool ReadScriptFile::retrieveIdentifier(FILE* f)
         return true;
     }
 
-    ungetc(tmp, f);
+    this->ungetChar(tmp, f);
     this->setToken(IDENTIFIER);
     return false;
 }
@@ -270,7 +267,7 @@ bool ReadScriptFile::retrieveRelationalOperator(FILE* f)
 
         }else{
             if ( c != '>' ){
-                ungetc(c, f);
+                this->ungetChar(c, f);
                 this->Token = SPECIAL;
                 return false;
             }
@@ -292,7 +289,7 @@ bool ReadScriptFile::retrieveRelationalOperator(FILE* f)
             return false;
         }
         else{
-            ungetc(c, f);
+             this->ungetChar(c, f);
             this->Token = SPECIAL;
             return false;
         }
@@ -313,7 +310,7 @@ bool ReadScriptFile::retrieveSeparator(FILE* f)
         return true;
     }
 
-    ungetc(c, f);
+    this->ungetChar(c, f);
     this->Token = SPECIAL;
     return false;
 }
@@ -428,7 +425,6 @@ LABEL_3:
   this->Bytes.clear();
   this->String.clear();
 
-  f = this->File[this->RecursionDepth];
   while ( 2 )
   {
     if ( pos == 3999 )
@@ -485,7 +481,7 @@ LABEL_3:
                 return;
             }
 
-            ungetc(v18, f);
+            this->ungetChar(v18, f);
             if(!std::isdigit(v18) && v18 != '-'){
 
                 this->Token = SPECIAL;
@@ -515,7 +511,7 @@ LABEL_3:
 
         continue;
       case 1:
-        v9 = getc(f);
+        v9 = this->getChar(f);
         if ( v9 != -1 )
         {
           if ( v9 == 10 )
@@ -534,7 +530,7 @@ LABEL_3:
         goto LABEL_3;
 
       case 3:
-        v12 = getc(f);
+        v12 = this->getChar(f);
 
         if ( v12 == -1 ){
             this->Token = NUMBER;
@@ -550,7 +546,7 @@ LABEL_3:
             v1 = 4;
             continue;
         }
-        ungetc(v12, f);
+        this->ungetChar(v12, f);
 
         this->Token = NUMBER;
         return;
@@ -582,7 +578,7 @@ LABEL_3:
         {
           if ( v16 != 45 )
           {
-            ungetc(v16, f);
+            this->ungetChar(v16, f);
 
             this->Bytes.emplace_back(this->Number);
             this->Token = BYTES;
@@ -661,41 +657,38 @@ void ReadScriptFile::error(const std::string &Text)
     v3 = v2 + 1;
   else
     v3 = this->Filename[this->RecursionDepth];
+
   snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", v3, this->Line[this->RecursionDepth], Text.c_str());
-  for (int i = this->RecursionDepth; i != -1; i = this->RecursionDepth )
-  {
-    if ( fclose(this->File[i]) )
-    {
-      this->error("ErrorString");
-    }
-    --this->RecursionDepth;
-  }
+
+ this->closeAll();
 }
 
 void ReadScriptFile::internalClose(int fileIndex)
 {
     int index = fileIndex ? fileIndex : this->RecursionDepth;
-
-    if ( fclose(this->File[index]) )
-    {
-      this->error("TReadScriptFile::close: Fehler %d beim Schlie");
-    }
+    this->Files[index]->close();
     --this->RecursionDepth;
 }
 
 void ReadScriptFile::close()
 {
-  int v1; // eax
-
-  v1 = this->RecursionDepth;
-  if ( v1 == -1 )
+  if ( this->RecursionDepth == -1 )
   {
     this->error("TReadScriptFile::close: Keine Datei offen.\n");
   }
   else
   {
-    this->internalClose(v1);
+    this->internalClose(this->RecursionDepth);
   }
+}
+
+void ReadScriptFile::closeAll()
+{
+    int recursion = this->RecursionDepth;
+    for (int i = 0; i < recursion; i++ )
+    {
+      this->internalClose();
+    }
 }
 
 std::string strLower(std::string a1)
