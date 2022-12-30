@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <stdio.h>
 #include <fstream>
 
 std::string strLower(std::string a1);
@@ -50,26 +49,29 @@ public:
 
 private:
     void setToken(TOKEN token);
-    bool retrieveIdentifier(FILE* f);
-    bool retrieveNumber(FILE* f);
+    bool retrieveIdentifier();
+    bool retrieveNumber();
 
-    bool retrieveCoordinate(FILE* f);
+    bool retrieveCoordinate();
 
-    bool retrieveCoordinateSign(FILE* f);
-    bool retrieveCoordinateByAxis(FILE* f, int &value);
+    bool retrieveCoordinateSign();
+    bool retrieveCoordinateByAxis(int &value);
 
-    bool retrieveRelationalOperator(FILE* f);
-    bool retrieveSeparator(FILE* f);
-    bool retrieveString(FILE* f);
-    bool retrieveFilename(FILE* f);
+    bool retrieveRelationalOperator();
+    bool retrieveSeparator();
+    bool retrieveString();
+    bool retrieveFilename();
 
-    int getNextChar(FILE* f);
-    bool getNextSpecial(FILE *f, int &c);
+    int getNextChar();
+    bool getNextSpecial(int &c);
 
     void internalClose(int fileIndex = 0);
 
-    int getChar(FILE* f);
-    void ungetChar(int c, FILE* f);
+    int getChar();
+    void ungetChar(int c);
+
+    void skipLine();
+    void skipSpace();
 public:
 //private:
     TOKEN Token;
