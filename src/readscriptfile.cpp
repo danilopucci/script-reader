@@ -46,16 +46,28 @@ void ReadScriptFile::readSymbol(char Symbol)
 std::string ReadScriptFile::readString()
 {
   this->nextToken();
+  return this->getString();
+}
+
+std::string ReadScriptFile::getString()
+{
   if ( this->Token != STRING )
     this->error("string expected");
+
   return this->String;
 }
 
 char ReadScriptFile::readSpecial()
 {
   this->nextToken();
+  return this->getSpecial();
+}
+
+uint8_t ReadScriptFile::getSpecial()
+{
   if ( this->Token != SPECIAL )
     this->error("special-char expected");
+
   return this->Special;
 }
 
@@ -83,6 +95,11 @@ int ReadScriptFile::readNumber()
 std::string ReadScriptFile::readIdentifier(void)
 {
   this->nextToken();
+  return this->getIdentifier();
+}
+
+std::string ReadScriptFile::getIdentifier()
+{
   if ( this->Token != IDENTIFIER )
     this->error("identifier expected");
 
@@ -92,6 +109,11 @@ std::string ReadScriptFile::readIdentifier(void)
 void ReadScriptFile::readCoordinate(int &x,int &y,int &z)
 {
   this->nextToken();
+  this->getCoordinate(x, y, z);
+}
+
+void ReadScriptFile::getCoordinate(int &x,int &y,int &z)
+{
   if ( this->Token != COORDINATE )
     this->error("coordinates expected");
   x = this->CoordX;
@@ -102,6 +124,11 @@ void ReadScriptFile::readCoordinate(int &x,int &y,int &z)
 uint8_t* ReadScriptFile::readBytesequence(void)
 {
   this->nextToken();
+  return this->getBytesequence();
+}
+
+uint8_t* ReadScriptFile::getBytesequence()
+{
   if ( this->Token != BYTES )
     this->error("byte-sequence expected");
   return this->Bytes.data();
@@ -607,20 +634,6 @@ void ReadScriptFile::setToken(TOKEN token)
     this->Token = token;
 }
 
-std::string ReadScriptFile::getString()
-{
-  if ( this->Token != STRING )
-    this->error("string expected");
-  return this->String;
-}
-
-uint8_t ReadScriptFile::getSpecial()
-{
-  if ( this->Token != SPECIAL )
-    this->error("special-char expected");
-  return this->Special;
-}
-
 int ReadScriptFile::getNumber()
 {
   if ( this->Token != NUMBER )
@@ -628,28 +641,8 @@ int ReadScriptFile::getNumber()
   return this->Number;
 }
 
-std::string ReadScriptFile::getIdentifier()
-{
-  if ( this->Token != IDENTIFIER )
-    this->error("identifier expected");
-  return strLower(this->String);
-}
 
-void ReadScriptFile::getCoordinate(int &x,int &y,int &z)
-{
-  if ( this->Token != COORDINATE )
-    this->error("coordinates expected");
-  x = this->CoordX;
-  y = this->CoordY;
-  z = this->CoordZ;
-}
 
-uint8_t* ReadScriptFile::getBytesequence()
-{
-  if ( this->Token != BYTES )
-    this->error("byte-sequence expected");
-  return this->Bytes.data();
-}
 
 void ReadScriptFile::error(const std::string &Text)
 {
