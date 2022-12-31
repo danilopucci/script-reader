@@ -175,26 +175,35 @@ LABEL_9:
 
 bool ReadScriptFile::retrieveIdentifier()
 {
-    int tmp = 0;
     int c = 0;
-    c = this->getChar();
-    tmp = c;
+    bool result = true;
 
-    if ( pos == 30 )
-      this->error("identifier too long");
-    if ( c == -1 ){
-        this->setToken(IDENTIFIER);
-        return false;
+    if(std::isalpha(this->lastGottenChar)){
+        this->String.push_back(this->lastGottenChar);
     }
 
-    if ( std::isalpha(tmp) || std::isdigit(tmp) || tmp == '_' ){
-        this->String.push_back(tmp);
-        return true;
+    while(true){
+        c = this->getChar();
+
+        if (this->String.length() == 30 )
+            this->error("identifier too long");
+
+        if ( c == -1 ){
+            result = false;
+            break;
+        }
+
+        if ( std::isalpha(c) || std::isdigit(c) || c == '_' ){
+            this->String.push_back(c);
+        }else{
+            this->ungetChar(c);
+            result = false;
+            break;
+        }
     }
 
-    this->ungetChar(tmp);
     this->setToken(IDENTIFIER);
-    return false;
+    return result;
 }
 
 bool ReadScriptFile::retrieveNumber()
@@ -342,33 +351,37 @@ bool ReadScriptFile::retrieveSeparator()
 
 bool ReadScriptFile::retrieveString()
 {
-    int c = this->getNextChar();
+    int c = 0;
+    bool result = true;
 
-    if ( c == '"' )
-    {
-        this->setToken(STRING);
-        return false;
-    }
-    else if ( c == '\\' )
-    {
+    while(true){
         c = this->getNextChar();
 
-        if ( c == 110 ){
-            this->String.push_back(10);
-        }else{
+        if ( c == '"' )
+        {
+            result = false;
+            break;
+        }
+        else if ( c == '\\' )
+        {
+            c = this->getNextChar();
+
+            if ( c == 110 ){
+                this->String.push_back(10);
+            }else{
+                this->String.push_back(c);
+            }
+        }
+        else
+        {
+            if ( c == 10 )
+                ++this->Line[this->RecursionDepth];
             this->String.push_back(c);
         }
-
-        ++pos;
     }
-    else
-    {
-        if ( c == 10 )
-            ++this->Line[this->RecursionDepth];
-        this->String.push_back(c);
-    }
-    return true;
 
+    this->setToken(STRING);
+    return result;
 }
 
 bool ReadScriptFile::retrieveFilename()
@@ -427,24 +440,6 @@ void ReadScriptFile::skipLine()
 
 void ReadScriptFile::nextToken()
 {
-  int v6; // edi
-  int v7; // eax
-  int v9; // eax
-  int v10; // eax
-
-  int v12; // eax
-
-  int v14; // eax
-
-  int v16; // eax
-  int v17; // eax
-  int v18; // eax
-  int v19; // eax
-
-  int v28; // eax
-  int v29; // eax
-  int v30; // eax
-  int v31; // eax
 
   if ( this->RecursionDepth == -1 )
   {
@@ -455,17 +450,21 @@ void ReadScriptFile::nextToken()
 LABEL_3:
 
   int v1 = 0;
+  int v2 = 0;
+  int v6 = 0;
 
   this->Number = 0;
   this->Sign = 1;
-  this->pos = 0;
+
   this->Bytes.clear();
   this->String.clear();
 
   while ( 2 )
   {
-    if ( pos == 3999 )
+    if ( this->String.length() == 3999 ){
       this->error("string too long");
+    }
+
     switch ( v1 )
     {
       case 0:
@@ -508,8 +507,7 @@ LABEL_3:
             goto LABEL_3;
         }else if ( std::isalpha(v6) )
         {
-            this->String.push_back(v6);
-            while(this->retrieveIdentifier()){}
+            this->retrieveIdentifier();
             return;
 
         }else if ( std::isdigit(v6) )
@@ -517,21 +515,21 @@ LABEL_3:
             this->Number = v6 - '0';
             v1 = 3;
         }else if(v6 == '"'){
-            while(this->retrieveString()){}
+            this->retrieveString();
             return;
 
         }else if(v6 == '['){
 
             this->Special = '[';
-            v18 = this->getChar();
+            v2 = this->getChar();
 
-            if ( v18 == -1 ){
+            if ( v2 == -1 ){
                 this->Token = SPECIAL;
                 return;
             }
 
-            this->ungetChar(v18);
-            if(!std::isdigit(v18) && v18 != '-'){
+            this->ungetChar(v2);
+            if(!std::isdigit(v2) && v2 != '-'){
 
                 this->Token = SPECIAL;
                 return;
@@ -561,55 +559,55 @@ LABEL_3:
         continue;
 
       case 3:
-        v12 = this->getChar();
+        v6 = this->getChar();
 
-        if ( v12 == -1 ){
+        if ( v6 == -1 ){
             this->Token = NUMBER;
             return;
         }
-        if ( std::isdigit(v12) ){
-            this->Number = v12 + 10 * this->Number - '0';
+        if ( std::isdigit(v6) ){
+            this->Number = v6 + 10 * this->Number - '0';
             continue;
         }
 
-        if ( v12 == '-' ){
+        if ( v6 == '-' ){
             this->Bytes.emplace_back(this->Number);
             v1 = 4;
             continue;
         }
-        this->ungetChar(v12);
+        this->ungetChar(v6);
 
         this->Token = NUMBER;
         return;
       case 4:
-        v14 = this->getNextChar();
+        v2 = this->getNextChar();
 
-        if ( !std::isdigit(v14) )
+        if ( !std::isdigit(v2) )
           this->error("syntax error");
 
 
-        this->Number = v14 - 48;
+        this->Number = v2 - 48;
 
         v1 = 5;
         continue;
       case 5:
-        v16 = this->getChar();
+        v2 = this->getChar();
 
-        if ( v16 == -1 ){
+        if ( v2 == -1 ){
             this->Bytes.emplace_back(this->Number);
             this->Token = BYTES;
             return;
         }
 
-        if ( std::isdigit(v16) )
+        if ( std::isdigit(v2) )
         {
-          this->Number = v16 + 10 * this->Number - 48;
+          this->Number = v2 + 10 * this->Number - 48;
         }
         else
         {
-          if ( v16 != 45 )
+          if ( v2 != 45 )
           {
-            this->ungetChar(v16);
+            this->ungetChar(v2);
 
             this->Bytes.emplace_back(this->Number);
             this->Token = BYTES;
