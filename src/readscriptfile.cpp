@@ -11,7 +11,6 @@ ReadScriptFile::ReadScriptFile()
     this->Bytes.reserve(4);
     this->String.reserve(4000);
 
-    this->pos = 0;
     this->Sign = 1;
 }
 
@@ -20,16 +19,14 @@ ReadScriptFile::~ReadScriptFile()
   if ( this->RecursionDepth != -1 )
   {
     error("TReadScriptFile::~TReadScriptFile: Datei ist noch offen.\n");
-    for (int i = this->RecursionDepth; i != -1; i = this->RecursionDepth )
-    {
-        this->internalClose(i);
-    }
+    this->closeAll();
   }
 }
 
 int ReadScriptFile::getChar()
 {
-    return this->Files[this->RecursionDepth]->get();
+    this->lastGottenChar = this->Files[this->RecursionDepth]->get();
+    return this->lastGottenChar;
 }
 
 void ReadScriptFile::ungetChar(int c)

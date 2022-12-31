@@ -87,8 +87,9 @@ public:
     char Filename[3][4096];
     char ErrorString[100];
 
-    int pos;
     int Sign;
+
+    int lastGottenChar;
 
     std::fstream* Files[3];
 };
