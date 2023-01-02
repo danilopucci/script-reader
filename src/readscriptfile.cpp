@@ -231,10 +231,6 @@ bool ReadScriptFile::retrieveNumber()
 {
     this->Number = 0;
 
-//    if(std::isdigit(this->lastGottenChar)){
-//        this->Number = this->lastGottenChar - '0';
-//    }
-
     int v6 = 0;
     bool result = true;
 
@@ -262,14 +258,21 @@ bool ReadScriptFile::retrieveNumber()
 
 bool ReadScriptFile::retrieveCoordinate()
 {
-    this->retrieveCoordinateSign();
-    while(this->retrieveCoordinateByAxis(this->CoordX)) {}
+    int tmp = 0;
 
     this->retrieveCoordinateSign();
-    while(this->retrieveCoordinateByAxis(this->CoordY)) {}
+    this->retrieveNumber();
+    this->CoordX = this->Number * this->Sign;
+    this->getNextChar();
 
     this->retrieveCoordinateSign();
-    while(this->retrieveCoordinateByAxis(this->CoordZ)) {}
+    this->retrieveNumber();
+    this->CoordY = this->Number * this->Sign;
+    this->getNextChar();
+
+    this->retrieveCoordinateSign();
+    this->retrieveNumber();
+    this->CoordZ = this->Number * this->Sign;
 
     this->setToken(COORDINATE);
     return true;
@@ -282,7 +285,6 @@ bool ReadScriptFile::retrieveCoordinateSign()
     if ( std::isdigit(tmp) )
     {
       Sign = 1;
-      this->Number = tmp - '0';
     }
     else
     {
@@ -292,24 +294,9 @@ bool ReadScriptFile::retrieveCoordinateSign()
       Sign = -1;
       this->Number = 0;
     }
+
+    this->ungetChar(tmp);
     return true;
-}
-
-bool ReadScriptFile::retrieveCoordinateByAxis(int &value)
-{
-    int tmp = this->getNextChar();
-
-    if ( std::isdigit(tmp) ){
-        this->Number = tmp + 10 * this->Number - '0';
-        return true;
-    }
-
-    if ( tmp != ',' && tmp != ']')
-      this->error("syntax error");
-
-
-    value = this->Number * Sign;
-    return false;
 }
 
 bool ReadScriptFile::retrieveRelationalOperator()
@@ -599,10 +586,6 @@ void ReadScriptFile::setToken(TOKEN token)
 {
     this->Token = token;
 }
-
-
-
-
 
 void ReadScriptFile::error(const std::string &Text)
 {

@@ -56,7 +56,6 @@ private:
     bool retrieveCoordinate();
 
     bool retrieveCoordinateSign();
-    bool retrieveCoordinateByAxis(int &value);
 
     bool retrieveRelationalOperator();
     bool retrieveSeparator();
