@@ -339,15 +339,14 @@ bool ReadScriptFile::retrieveString()
     int c = 0;
     bool result = true;
 
-    while(true){
-        c = this->getNextChar();
+    c = this->getChar();
 
-        if ( c == '"' )
-        {
-            result = false;
-            break;
-        }
-        else if ( c == '\\' )
+    if(c != '"'){
+        return false;
+    }
+
+    while((c = this->getChar()) != '"'){
+        if ( c == '\\' )
         {
             c = this->getNextChar();
 
@@ -361,30 +360,13 @@ bool ReadScriptFile::retrieveString()
         {
             if ( c == 10 )
                 ++this->Line[this->RecursionDepth];
+
             this->String.push_back(c);
         }
     }
 
     this->setToken(STRING);
     return result;
-}
-
-bool ReadScriptFile::retrieveFilename()
-{
-    int c = this->getNextChar();
-
-    if ( c != '"' )
-        this->error("syntax error");
-
-
-    do{
-        c = this->getNextChar();
-
-        if ( c != '"' ){
-            this->String.push_back(c);
-        }
-    }while(c != '"');
-    return true;
 }
 
 int ReadScriptFile::getNextChar()
@@ -487,7 +469,7 @@ LABEL_3:
 
         }else if ( v6 == '@' )
         {
-            this->retrieveFilename();
+            this->retrieveString();
             this->open(this->String);
             goto LABEL_3;
         }else if ( std::isalpha(v6) )
@@ -501,6 +483,7 @@ LABEL_3:
             this->retrieveNumberOrBytes();
             return;
         }else if(v6 == '"'){
+            this->ungetChar(v6);
             this->retrieveString();
             return;
 
