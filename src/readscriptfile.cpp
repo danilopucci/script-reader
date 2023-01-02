@@ -397,6 +397,7 @@ void ReadScriptFile::skipSpace()
     do{
         c = this->getChar();
     }while(std::isspace(c));
+    this->ungetChar(c);
 }
 
 void ReadScriptFile::skipLine()
@@ -449,7 +450,8 @@ void ReadScriptFile::nextToken()
           ++this->Line[this->RecursionDepth];
         }
         if(std::isspace(v6)){
-
+            this->ungetChar(v6);
+            this->skipSpace();
             continue;
         }
 
