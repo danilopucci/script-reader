@@ -211,30 +211,53 @@ bool ReadScriptFile::retrieveIdentifier()
     return result;
 }
 
+bool ReadScriptFile::retrieveNumberOrBytes()
+{
+    this->Bytes.clear();
+    this->retrieveNumber();
+    this->Bytes.emplace_back(this->Number);
+
+    while(this->getChar() == '-'){
+        this->retrieveNumber();
+        this->Bytes.emplace_back(this->Number);
+        this->Token = BYTES;
+    }
+
+    this->ungetChar(this->lastGottenChar);
+    return false;
+}
+
 bool ReadScriptFile::retrieveNumber()
 {
-    /*int tmp = 0;
-    int c = 0;
-    c = getc();
-    v13 = c;
-    if ( c == -1 ){
-        this->Token = NUMBER;
-        return;
-    }
-    if ( std::isdigit(v12) ){
-        this->Number = v13 + 10 * this->Number - 48;
-        continue;
-    }
+    this->Number = 0;
 
-    if ( v13 == 45 ){
-        this->Bytes[pos++] = this->Number;
-        v1 = 4;
-        continue;
+//    if(std::isdigit(this->lastGottenChar)){
+//        this->Number = this->lastGottenChar - '0';
+//    }
+
+    int v6 = 0;
+    bool result = true;
+
+    while(true){
+
+        v6 = this->getChar();
+
+        if ( v6 == -1 ){
+            result = false;
+            break;
+        }
+
+        if ( std::isdigit(v6) ){
+            this->Number = v6 + 10 * this->Number - '0';
+        }else{
+            this->ungetChar(v6);
+            result = false;
+            break;
+        }
     }
-    ungetc(v13, f);
 
     this->Token = NUMBER;
-    return;*/
+    return result;
 }
 
 bool ReadScriptFile::retrieveCoordinate()
@@ -517,8 +540,9 @@ LABEL_3:
 
         }else if ( std::isdigit(v6) )
         {
-            this->Number = v6 - '0';
-            v1 = 3;
+            this->ungetChar(v6);
+            this->retrieveNumberOrBytes();
+            return;
         }else if(v6 == '"'){
             this->retrieveString();
             return;
@@ -561,67 +585,6 @@ LABEL_3:
             return;
         }
 
-        continue;
-
-      case 3:
-        v6 = this->getChar();
-
-        if ( v6 == -1 ){
-            this->Token = NUMBER;
-            return;
-        }
-        if ( std::isdigit(v6) ){
-            this->Number = v6 + 10 * this->Number - '0';
-            continue;
-        }
-
-        if ( v6 == '-' ){
-            this->Bytes.emplace_back(this->Number);
-            v1 = 4;
-            continue;
-        }
-        this->ungetChar(v6);
-
-        this->Token = NUMBER;
-        return;
-      case 4:
-        v2 = this->getNextChar();
-
-        if ( !std::isdigit(v2) )
-          this->error("syntax error");
-
-
-        this->Number = v2 - 48;
-
-        v1 = 5;
-        continue;
-      case 5:
-        v2 = this->getChar();
-
-        if ( v2 == -1 ){
-            this->Bytes.emplace_back(this->Number);
-            this->Token = BYTES;
-            return;
-        }
-
-        if ( std::isdigit(v2) )
-        {
-          this->Number = v2 + 10 * this->Number - 48;
-        }
-        else
-        {
-          if ( v2 != 45 )
-          {
-            this->ungetChar(v2);
-
-            this->Bytes.emplace_back(this->Number);
-            this->Token = BYTES;
-            return;
-          }
-
-          this->Bytes.emplace_back(this->Number);
-          v1 = 4;
-        }
         continue;
 
       default:

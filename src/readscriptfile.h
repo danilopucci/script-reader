@@ -51,6 +51,7 @@ private:
     void setToken(TOKEN token);
     bool retrieveIdentifier();
     bool retrieveNumber();
+    bool retrieveNumberOrBytes();
 
     bool retrieveCoordinate();
 
