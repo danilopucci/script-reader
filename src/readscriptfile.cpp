@@ -358,7 +358,7 @@ bool ReadScriptFile::retrieveString()
         }
         else
         {
-            if ( c == 10 )
+            if ( c == '\n' )
                 ++this->Line[this->RecursionDepth];
 
             this->String.push_back(c);
@@ -397,12 +397,17 @@ void ReadScriptFile::skipSpace()
     do{
         c = this->getChar();
     }while(std::isspace(c));
+
     this->ungetChar(c);
 }
 
 void ReadScriptFile::skipLine()
 {
-    this->Files[this->RecursionDepth]->ignore(std::numeric_limits<std::streamsize>::max(), 10);
+    int c;
+    do{
+        c = this->getChar();
+    }while(c != '\n');
+
     ++this->Line[this->RecursionDepth];
 }
 
@@ -416,8 +421,6 @@ void ReadScriptFile::nextToken()
     return;
   }
 
-  int v1 = 0;
-  int v2 = 0;
   int v6 = 0;
 
   this->Number = 0;
@@ -426,96 +429,91 @@ void ReadScriptFile::nextToken()
   this->Bytes.clear();
   this->String.clear();
 
-  while ( 2 )
+  while (true)
   {
-    if ( this->String.length() == 3999 ){
-      this->error("string too long");
-    }
+      if ( this->String.length() == 3999 ){
+          this->error("string too long");
+      }
 
-    switch ( v1 )
-    {
-      case 0:
-        v6 = this->getChar();
-        if ( v6 == -1 ){
-            if ( this->RecursionDepth <= 0 ){
-                this->setToken(ENDOFFILE);
-                return;
-            }
-            this->internalClose();
-            this->nextToken();
-            return;
-        }
-        if ( v6 == 10 )
-        {
+      v6 = this->getChar();
+
+      if ( v6 == -1 ){
+          if ( this->RecursionDepth <= 0 ){
+              this->setToken(ENDOFFILE);
+              return;
+          }
+          this->internalClose();
+          this->nextToken();
+          return;
+      }
+
+      if ( v6 == '\n' )
+      {
           ++this->Line[this->RecursionDepth];
-        }
-        if(std::isspace(v6)){
-            this->ungetChar(v6);
-            this->skipSpace();
-            continue;
-        }
+          continue;
+      }
 
-        if ( v6 == '#' )
-        {
-            this->skipLine();
-            v1 = 0;
+      if(std::isspace(v6)){
+          this->ungetChar(v6);
+          this->skipSpace();
+          continue;
+      }
 
-            if(this->Files[this->RecursionDepth]->eof()){
-                if ( this->RecursionDepth <= 0 ){
-                    this->setToken(ENDOFFILE);
-                    return;
-                }
-                this->internalClose();
-                this->nextToken();
-                return;
-            }
+      if ( v6 == '#' )
+      {
+          this->skipLine();
+          continue;
+      }
 
-        }else if ( v6 == '@' )
-        {
-            this->retrieveString();
-            this->open(this->String);
-            this->nextToken();
-            return;
-        }else if ( std::isalpha(v6) )
-        {
-            this->retrieveIdentifier();
-            return;
+      if ( v6 == '@' )
+      {
+          this->retrieveString();
+          this->open(this->String);
+          this->nextToken();
+          return;
+      }
 
-        }else if ( std::isdigit(v6) )
-        {
-            this->ungetChar(v6);
-            this->retrieveNumberOrBytes();
-            return;
-        }else if(v6 == '"'){
-            this->ungetChar(v6);
-            this->retrieveString();
-            return;
+      if ( std::isalpha(v6) )
+      {
+          this->retrieveIdentifier();
+          return;
 
-        }else if ( v6 == '<' || v6 == '>')
-        {
-            this->Special = v6;
-            if(!this->retrieveRelationalOperator()){
-                return;
-            }
+      }
 
-        }else if ( v6 == '-' )
-        {
-            this->Special = '-';
-            this->retrieveSeparator();
-            return;
-        }else{
-            this->Special = v6;
-            this->setToken(SPECIAL);
-            return;
-        }
+      if ( std::isdigit(v6) )
+      {
+          this->ungetChar(v6);
+          this->retrieveNumberOrBytes();
+          return;
+      }
 
-        continue;
+      if(v6 == '"'){
+          this->ungetChar(v6);
+          this->retrieveString();
+          return;
 
-      default:
-        this->error("TReadScriptFile::nextToken: Ung");
-        v1 = 0;
-        continue;
-    }
+      }
+
+      if ( v6 == '<' || v6 == '>')
+      {
+          this->Special = v6;
+          if(!this->retrieveRelationalOperator()){
+              return;
+          }
+      }
+
+      if ( v6 == '-' )
+      {
+          this->Special = '-';
+          this->retrieveSeparator();
+          return;
+      }
+
+      this->Special = v6;
+      this->setToken(SPECIAL);
+      return;
+
+
   }
 }
 
