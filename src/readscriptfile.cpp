@@ -25,12 +25,16 @@ ReadScriptFile::~ReadScriptFile()
 
 int ReadScriptFile::getChar()
 {
+    this->lastGottenCharHistorical[1] = this->lastGottenCharHistorical[0];
     this->lastGottenChar = this->Files[this->RecursionDepth]->get();
+    this->lastGottenCharHistorical[0] = this->lastGottenChar;
     return this->lastGottenChar;
 }
 
 void ReadScriptFile::ungetChar(int c)
 {
+    this->lastGottenCharHistorical[0] = this->lastGottenCharHistorical[1];
+    this->lastGottenChar = this->lastGottenCharHistorical[1];
     this->Files[this->RecursionDepth]->unget();
 }
 
@@ -73,23 +77,24 @@ uint8_t ReadScriptFile::getSpecial()
 
 int ReadScriptFile::readNumber()
 {
-  TOKEN v1; // edx
   int v2; // esi
 
   this->nextToken();
-  v1 = this->Token;
   v2 = 1;
   if ( this->Token == SPECIAL && this->Special == '-' )
   {
     v2 = -1;
     this->nextToken();
-    v1 = this->Token;
   }
-  if ( v1 != NUMBER )
-    this->error("number expected");
+
+  return this->getNumber() * v2;
+}
+
+int ReadScriptFile::getNumber()
+{
   if ( this->Token != NUMBER )
     this->error("number expected");
-  return this->Number * v2;
+  return this->Number;
 }
 
 std::string ReadScriptFile::readIdentifier(void)
@@ -632,12 +637,6 @@ void ReadScriptFile::setToken(TOKEN token)
     this->Token = token;
 }
 
-int ReadScriptFile::getNumber()
-{
-  if ( this->Token != NUMBER )
-    this->error("number expected");
-  return this->Number;
-}
 
 
 

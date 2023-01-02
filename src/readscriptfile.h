@@ -89,7 +89,9 @@ public:
 
     int Sign;
 
+
     int lastGottenChar;
+    int lastGottenCharHistorical[2];
 
     std::fstream* Files[3];
 };
