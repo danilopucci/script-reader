@@ -414,7 +414,6 @@ void ReadScriptFile::nextToken()
     this->Token = ENDOFFILE;
     return;
   }
-LABEL_3:
 
   int v1 = 0;
   int v2 = 0;
@@ -442,7 +441,8 @@ LABEL_3:
                 return;
             }
             this->internalClose();
-            goto LABEL_3;
+            this->nextToken();
+            return;
         }
         if ( v6 == 10 )
         {
@@ -464,14 +464,16 @@ LABEL_3:
                     return;
                 }
                 this->internalClose();
-                goto LABEL_3;
+                this->nextToken();
+                return;
             }
 
         }else if ( v6 == '@' )
         {
             this->retrieveString();
             this->open(this->String);
-            goto LABEL_3;
+            this->nextToken();
+            return;
         }else if ( std::isalpha(v6) )
         {
             this->retrieveIdentifier();
@@ -540,6 +542,7 @@ void ReadScriptFile::internalClose(int fileIndex)
 {
     int index = fileIndex ? fileIndex : this->RecursionDepth;
     this->Files[index]->close();
+    this->Line[index] = 0;
     --this->RecursionDepth;
 }
 
