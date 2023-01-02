@@ -112,9 +112,22 @@ std::string ReadScriptFile::getIdentifier()
 }
 
 void ReadScriptFile::readCoordinate(int &x,int &y,int &z)
-{
-  this->nextToken();
-  this->getCoordinate(x, y, z);
+{    
+  this->readSymbol('[');
+
+  this->CoordX = this->readNumber();
+  this->readSymbol(',');
+
+  this->CoordY = this->readNumber();
+  this->readSymbol(',');
+
+  this->CoordZ = this->readNumber();
+
+  this->readSymbol(']');
+
+  this->Token = COORDINATE;
+
+   this->getCoordinate(x, y, z);
 }
 
 void ReadScriptFile::getCoordinate(int &x,int &y,int &z)
@@ -254,49 +267,6 @@ bool ReadScriptFile::retrieveNumber()
 
     this->Token = NUMBER;
     return result;
-}
-
-bool ReadScriptFile::retrieveCoordinate()
-{
-    int tmp = 0;
-
-    this->retrieveCoordinateSign();
-    this->retrieveNumber();
-    this->CoordX = this->Number * this->Sign;
-    this->getNextChar();
-
-    this->retrieveCoordinateSign();
-    this->retrieveNumber();
-    this->CoordY = this->Number * this->Sign;
-    this->getNextChar();
-
-    this->retrieveCoordinateSign();
-    this->retrieveNumber();
-    this->CoordZ = this->Number * this->Sign;
-
-    this->setToken(COORDINATE);
-    return true;
-}
-
-bool ReadScriptFile::retrieveCoordinateSign()
-{
-    int tmp = this->getNextChar();
-
-    if ( std::isdigit(tmp) )
-    {
-      Sign = 1;
-    }
-    else
-    {
-      if ( tmp != '-' )
-        this->error("syntax error");
-
-      Sign = -1;
-      this->Number = 0;
-    }
-
-    this->ungetChar(tmp);
-    return true;
 }
 
 bool ReadScriptFile::retrieveRelationalOperator()
@@ -532,26 +502,6 @@ LABEL_3:
             return;
         }else if(v6 == '"'){
             this->retrieveString();
-            return;
-
-        }else if(v6 == '['){
-
-            this->Special = '[';
-            v2 = this->getChar();
-
-            if ( v2 == -1 ){
-                this->Token = SPECIAL;
-                return;
-            }
-
-            this->ungetChar(v2);
-            if(!std::isdigit(v2) && v2 != '-'){
-
-                this->Token = SPECIAL;
-                return;
-            }
-
-            this->retrieveCoordinate();
             return;
 
         }else if ( v6 == '<' || v6 == '>')

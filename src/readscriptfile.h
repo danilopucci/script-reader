@@ -53,10 +53,6 @@ private:
     bool retrieveNumber();
     bool retrieveNumberOrBytes();
 
-    bool retrieveCoordinate();
-
-    bool retrieveCoordinateSign();
-
     bool retrieveRelationalOperator();
     bool retrieveSeparator();
     bool retrieveString();
