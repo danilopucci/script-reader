@@ -43,6 +43,7 @@ void ReadScriptFile::readSymbol(char Symbol)
   this->nextToken();
   if ( this->Token != SPECIAL )
     this->error("special-char expected");
+
   if ( Symbol != this->Special )
     this->error("special-char expected");
 }
@@ -77,17 +78,17 @@ uint8_t ReadScriptFile::getSpecial()
 
 int ReadScriptFile::readNumber()
 {
-  int v2; // esi
+  int signal = 1;
 
   this->nextToken();
-  v2 = 1;
+
   if ( this->Token == SPECIAL && this->Special == '-' )
   {
-    v2 = -1;
+    signal = -1;
     this->nextToken();
   }
 
-  return this->getNumber() * v2;
+  return this->getNumber() * signal;
 }
 
 int ReadScriptFile::getNumber()
@@ -152,10 +153,9 @@ uint8_t* ReadScriptFile::getBytesequence()
   return this->Bytes.data();
 }
 
-void ReadScriptFile::open(const std::string& fileNameStr)
+void ReadScriptFile::open(const std::string& FileName)
 {
-  const char *FileName = fileNameStr.c_str();
-  char *v3; // eax
+  size_t index; // eax
 
   this->RecursionDepth += 1;
   if ( this->RecursionDepth == 3 )
@@ -164,16 +164,16 @@ void ReadScriptFile::open(const std::string& fileNameStr)
     this->error("Recursion depth too high");
   }
 LABEL_9:
-  if ( this->RecursionDepth <= 0 || *FileName == '/'
+  if ( this->RecursionDepth <= 0 || FileName.front() == '/'
 
-    || (strcpy(this->Filename[this->RecursionDepth], this->Filename[this->RecursionDepth-1]),
-        (v3 = findLast(this->Filename[this->RecursionDepth], 47)) == 0) )
+    || ( this->Filename[this->RecursionDepth] = std::string(this->Filename[this->RecursionDepth-1]),
+        (index = findLast(this->Filename[this->RecursionDepth], '/')) == 0) )
   {
-    strcpy(this->Filename[this->RecursionDepth], FileName);
+    this->Filename[this->RecursionDepth] = FileName;
   }
   else
   {
-    strcpy(v3 + 1, FileName);
+      this->Filename[this->RecursionDepth] = this->Filename[this->RecursionDepth].substr(0, index + 1).append(FileName);
   }
 
   this->Files[this->RecursionDepth] = new std::fstream(this->Filename[this->RecursionDepth], std::ios_base::in | std::ios_base::binary);
@@ -524,18 +524,19 @@ void ReadScriptFile::setToken(TOKEN token)
 
 void ReadScriptFile::error(const std::string &Text)
 {
-  char *v2; // eax
+  size_t index; // eax
   const char *v3; // ecx
 
-  v2 = findLast(this->Filename[this->RecursionDepth], 47);
-  if ( v2 )
-    v3 = v2 + 1;
-  else
-    v3 = this->Filename[this->RecursionDepth];
+  index = findLast(this->Filename[this->RecursionDepth], '/');
+  if ( index ){
+    v3 = &this->Filename[this->RecursionDepth].at(index + 1);
+  }else{
+    v3 = this->Filename[this->RecursionDepth].c_str();
+  }
 
   snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", v3, this->Line[this->RecursionDepth], Text.c_str());
 
- this->closeAll();
+  this->closeAll();
 }
 
 void ReadScriptFile::internalClose(int fileIndex)
@@ -578,19 +579,15 @@ std::string strLower(std::string a1)
     return lowerStr;
 }
 
-char * findLast(char *s, char c)
+size_t findLast(const std::string& str, char c)
 {
-  char *v2; // ebx
-  char *v4; // eax
+  size_t index = 0;
 
-  v2 = 0;
-  while ( 1 )
-  {
-    v4 = strchr(s, c);
-    if ( !v4 )
-      break;
-    v2 = v4;
-    s = v4 + 1;
+  index = str.find_last_of(c);
+
+  if(index == std::string::npos){
+      index = 0;
   }
-  return v2;
+
+  return index;
 }

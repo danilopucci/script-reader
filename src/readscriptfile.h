@@ -7,9 +7,7 @@
 #include <fstream>
 
 std::string strLower(std::string a1);
-char * findLast(char *s, char c);
-
-
+size_t findLast(const std::string &str, char c);
 
 enum TOKEN{
     ENDOFFILE        = 0,
@@ -35,20 +33,25 @@ public:
     std::string readIdentifier(void);
     void readCoordinate(int &x, int &y, int &z);
     uint8_t *readBytesequence(void);
-    void open(const std::string &fileNameStr);
+
     void nextToken();
+
     std::string getString();
     uint8_t getSpecial();
     int getNumber();
     std::string getIdentifier();
     void getCoordinate(int &x, int &y, int &z);
     uint8_t *getBytesequence();
-    void error(const std::string &Text);
+
+    void open(const std::string &fileNameStr);
     void close();
     void closeAll();
 
+    void error(const std::string &Text);
+
 private:
     void setToken(TOKEN token);
+
     bool retrieveIdentifier();
     bool retrieveNumber();
     bool retrieveNumberOrBytes();
@@ -56,7 +59,7 @@ private:
     bool retrieveRelationalOperator();
     bool retrieveSeparator();
     bool retrieveString();
-    bool retrieveFilename();
+
 
     int getNextChar();
     bool getNextSpecial(int &c);
@@ -80,7 +83,7 @@ public:
     int CoordY;
     int CoordZ;
     int Line[3];
-    char Filename[3][4096];
+    std::string Filename[3];
     char ErrorString[100];
 
     int Sign;
