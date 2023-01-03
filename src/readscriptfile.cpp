@@ -114,21 +114,8 @@ std::string ReadScriptFile::getIdentifier()
 
 void ReadScriptFile::readCoordinate(int &x,int &y,int &z)
 {    
-  this->readSymbol('[');
-
-  this->CoordX = this->readNumber();
-  this->readSymbol(',');
-
-  this->CoordY = this->readNumber();
-  this->readSymbol(',');
-
-  this->CoordZ = this->readNumber();
-
-  this->readSymbol(']');
-
-  this->Token = COORDINATE;
-
-   this->getCoordinate(x, y, z);
+  this->nextToken();
+  this->getCoordinate(x, y, z);
 }
 
 void ReadScriptFile::getCoordinate(int &x,int &y,int &z)
@@ -239,6 +226,53 @@ bool ReadScriptFile::retrieveNumberOrBytes()
     this->ungetChar(this->lastGottenChar);
     return false;
 }
+
+bool ReadScriptFile::retrieveCoordinate()
+{
+    if(this->getChar() != '['){
+        return false;
+    }
+
+    this->retrieveCoordinateSign();
+    this->retrieveNumber();
+    this->CoordX = this->Number * this->Sign;
+    this->getNextChar();
+
+    this->retrieveCoordinateSign();
+    this->retrieveNumber();
+    this->CoordY = this->Number * this->Sign;
+    this->getNextChar();
+
+    this->retrieveCoordinateSign();
+    this->retrieveNumber();
+    this->CoordZ = this->Number * this->Sign;
+
+    this->setToken(COORDINATE);
+    return true;
+}
+
+bool ReadScriptFile::retrieveCoordinateSign()
+{
+    int tmp = this->getNextChar();
+
+    if ( std::isdigit(tmp) )
+    {
+      Sign = 1;
+      this->ungetChar(tmp);
+    }
+    else
+    {
+      if ( tmp != '-' )
+        this->error("syntax error");
+
+      Sign = -1;
+      this->Number = 0;
+    }
+
+    return true;
+}
+
+
 
 bool ReadScriptFile::retrieveNumber()
 {
@@ -491,7 +525,26 @@ void ReadScriptFile::nextToken()
           this->ungetChar(v6);
           this->retrieveString();
           return;
+      }
 
+      if(v6 == '['){
+          this->Special = '[';
+          v6 = this->getChar();
+
+          if ( v6 == -1 ){
+              this->Token = SPECIAL;
+              return;
+          }
+
+          this->ungetChar(v6);
+          if(!std::isdigit(v6) && v6 != '-'){
+              this->Token = SPECIAL;
+              return;
+          }
+
+          this->ungetChar(v6);
+          this->retrieveCoordinate();
+          return;
       }
 
       if ( v6 == '<' || v6 == '>')

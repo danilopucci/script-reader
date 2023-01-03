@@ -55,6 +55,8 @@ private:
     bool retrieveIdentifier();
     bool retrieveNumber();
     bool retrieveNumberOrBytes();
+    bool retrieveCoordinate();
+    bool retrieveCoordinateSign();
 
     bool retrieveRelationalOperator();
     bool retrieveSeparator();
