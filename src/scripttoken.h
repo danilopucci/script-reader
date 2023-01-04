@@ -22,6 +22,7 @@ public:
     virtual int retrieveNumber(int &number) { return 0; };
     virtual int retrieveString(std::string &str) { return 0; };
     virtual int retrieveCoordinate(int &x, int &y, int &z){ return 0; };
+    virtual int retrieveIdentifier(std::string& identifier){ return 0; }
 
     void error(const std::string& err){ throw std::logic_error(err); }
 
@@ -46,11 +47,13 @@ public:
     TokenString(StreamBuffer &streamBuffer);
     int retrieveString(std::string &str);
 
+private:
     const int MAX_STRING_LENGHT = 4000;
 };
 
 
 class TokenCoordinate : public TokenNumber {
+
 public:
     TokenCoordinate(StreamBuffer &streamBuffer);
 
@@ -58,7 +61,17 @@ public:
 
 private:
     int retrieveSign(int &sign);
+};
 
+class TokenIdentifier : public ScriptToken {
+
+public:
+    TokenIdentifier(StreamBuffer &streamBuffer);
+
+    int retrieveIdentifier(std::string& identifier);
+
+private:
+    const int MAX_IDENTIFIER_LENGHT = 30;
 };
 
 #endif // SCRIPTTOKEN_H

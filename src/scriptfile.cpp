@@ -2,12 +2,12 @@
 
 ScriptFile::ScriptFile()
 {
-    this->fileLine = 0;
+    this->lineCount = 0;
 }
 
 ScriptFile::ScriptFile(const std::string& filename)
 {
-    this->fileLine = 0;
+    this->lineCount = 0;
     this->filename = filename;
 
     file = new std::fstream(this->filename, std::ios_base::in | std::ios_base::binary);
@@ -39,17 +39,17 @@ void ScriptFile::ungetChar()
     this->file->unget();
 }
 
-int ScriptFile::pushLine()
+int ScriptFile::pushLineCount()
 {
-    return this->fileLine++;
+    return this->lineCount++;
 }
 
-int ScriptFile::addLine(int count)
+int ScriptFile::addLineCount(int count)
 {
-    return this->fileLine += count;
+    return this->lineCount += count;
 }
 
-int ScriptFile::popLine()
+int ScriptFile::popLineCount()
 {
-    return this->fileLine--;
+    return this->lineCount--;
 }

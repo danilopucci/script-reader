@@ -159,3 +159,37 @@ int TokenCoordinate::retrieveSign(int &sign)
 
     return result;
 }
+
+TokenIdentifier::TokenIdentifier(StreamBuffer& streamBuffer) :
+    ScriptToken(streamBuffer)
+{
+    this->type = ScriptTokenType::aIDENTIFIER;
+}
+
+int TokenIdentifier::retrieveIdentifier(std::string& identifier)
+{
+    int c = 0;
+    int result = 0;
+
+    while(true){
+        c = this->streamBuffer.getChar();
+
+        if (identifier.length() >= MAX_IDENTIFIER_LENGHT )
+            this->error("identifier too long");
+
+        if ( c == -1 ){
+            result = -1;
+            break;
+        }
+
+        if ( std::isalpha(c) || std::isdigit(c) || c == '_' ){
+            identifier.push_back(c);
+        }else{
+            this->streamBuffer.ungetChar();
+            result = -1;
+            break;
+        }
+    }
+
+    return result;
+}

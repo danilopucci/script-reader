@@ -17,14 +17,14 @@ public:
     int getChar();
     void ungetChar();
 
-    int pushLine();
-    int addLine(int count);
-    int popLine();
+    int pushLineCount();
+    int addLineCount(int count);
+    int popLineCount();
 
 private:
     std::string filename;
     std::fstream* file;
-    int fileLine;
+    int lineCount;
 
 };
 
