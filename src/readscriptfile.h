@@ -80,7 +80,7 @@ public:
     int CoordX;
     int CoordY;
     int CoordZ;
-    int Line[3];
+
     std::string Filename[3];
     char ErrorString[100];
 
@@ -90,7 +90,7 @@ public:
     int lastGottenChar;
     int lastGottenCharHistorical[2];
 
-    std::fstream* Files[3];
+    ScriptFile* Files[3];
 
     ScriptFile *scriptFile;
 };

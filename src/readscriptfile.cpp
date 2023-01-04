@@ -168,7 +168,7 @@ LABEL_9:
   }
 
   //this->Files[this->RecursionDepth] = new std::fstream(this->Filename[this->RecursionDepth], std::ios_base::in | std::ios_base::binary);
-  this->scriptFile = new ScriptFile(this->Filename[this->RecursionDepth]);
+  this->scriptFile = this->Files[this->RecursionDepth] = new ScriptFile(this->Filename[this->RecursionDepth]);
 
   if(!this->scriptFile)
   //if ( !this->Files[this->RecursionDepth] )
@@ -181,7 +181,7 @@ LABEL_9:
     this->error("Cannot open script-file");
     goto LABEL_9;
   }
-  this->Line[this->RecursionDepth] = 1;
+  //this->Line[this->RecursionDepth] = 1;
 }
 
 bool ReadScriptFile::retrieveIdentifier()
@@ -257,12 +257,15 @@ bool ReadScriptFile::retrieveString()
     int c = 0;
     bool result = false;
     ScriptToken *token = new TokenString(*this->scriptFile);
-    int count = token->retrieveString(this->String);
+    //int count = token->retrieveString(this->String);
+    int count = token->retrieve(this->String);
     delete token;
 
     if(count > 0){
         this->scriptFile->addLineCount(count);
+
     }
+
 
     this->setToken(STRING);
     return result;
@@ -286,7 +289,7 @@ void ReadScriptFile::skipLine()
         c = this->getChar();
     }while(c != '\n');
 
-    ++this->Line[this->RecursionDepth];
+    this->scriptFile->pushLineCount();
 }
 
 void ReadScriptFile::nextToken()
@@ -324,7 +327,7 @@ void ReadScriptFile::nextToken()
 
       if ( v6 == '\n' )
       {
-          ++this->Line[this->RecursionDepth];
+          this->scriptFile->pushLineCount();
           continue;
       }
 
@@ -409,7 +412,7 @@ void ReadScriptFile::error(const std::string &Text)
     v3 = this->Filename[this->RecursionDepth].c_str();
   }
 
-  snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", v3, this->Line[this->RecursionDepth], Text.c_str());
+  snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", v3, this->scriptFile->getLineCount(), Text.c_str());
 
   this->closeAll();
 }
@@ -417,10 +420,11 @@ void ReadScriptFile::error(const std::string &Text)
 void ReadScriptFile::internalClose(int fileIndex)
 {
     int index = fileIndex ? fileIndex : this->RecursionDepth;
-    //this->Files[index]->close();
-    this->scriptFile->close();
-    this->Line[index] = 0;
+    this->Files[index]->resetLineCount();
+    this->Files[index]->close();
+
     --this->RecursionDepth;
+    this->scriptFile = this->Files[this->RecursionDepth];
 }
 
 void ReadScriptFile::close()
