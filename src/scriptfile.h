@@ -10,6 +10,7 @@ class ScriptFile : public StreamBuffer
 public:
     ScriptFile();
     ScriptFile(const std::string& filename);
+    ~ScriptFile();
 
     bool open();
     bool close();

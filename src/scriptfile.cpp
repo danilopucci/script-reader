@@ -13,6 +13,13 @@ ScriptFile::ScriptFile(const std::string& filename)
     file = new std::fstream(this->filename, std::ios_base::in | std::ios_base::binary);
 }
 
+ScriptFile::~ScriptFile()
+{
+    this->lineCount = 0;
+    this->filename = "";
+    delete file;
+}
+
 bool ScriptFile::open()
 {
     if(this->file != nullptr)

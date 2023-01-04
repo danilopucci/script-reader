@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <cctype>
-#include <limits>
+
 #include "scriptfile.h"
 #include "scripttoken.h"
 
@@ -186,32 +186,11 @@ LABEL_9:
 
 bool ReadScriptFile::retrieveIdentifier()
 {
-    int c = 0;
     bool result = true;
 
-    if(std::isalpha(this->lastGottenChar)){
-        this->String.push_back(this->lastGottenChar);
-    }
-
-    while(true){
-        c = this->getChar();
-
-        if (this->String.length() == 30 )
-            this->error("identifier too long");
-
-        if ( c == -1 ){
-            result = false;
-            break;
-        }
-
-        if ( std::isalpha(c) || std::isdigit(c) || c == '_' ){
-            this->String.push_back(c);
-        }else{
-            this->ungetChar(c);
-            result = false;
-            break;
-        }
-    }
+    ScriptToken *token = new TokenIdentifier(*this->scriptFile);
+    token->retrieveIdentifier(this->String);
+    delete token;
 
     this->setToken(IDENTIFIER);
     return result;
@@ -241,28 +220,6 @@ bool ReadScriptFile::retrieveCoordinate()
     delete token;
 
     this->setToken(COORDINATE);
-    return true;
-
-}
-
-bool ReadScriptFile::retrieveCoordinateSign()
-{
-    int tmp = this->getNextChar();
-
-    if ( std::isdigit(tmp) )
-    {
-      Sign = 1;
-      this->ungetChar(tmp);
-    }
-    else
-    {
-      if ( tmp != '-' )
-        this->error("syntax error");
-
-      Sign = -1;
-      this->Number = 0;
-    }
-
     return true;
 }
 
@@ -369,7 +326,7 @@ bool ReadScriptFile::retrieveString()
     delete token;
 
     if(count > 0){
-        this->scriptFile->addLine(count);
+        this->scriptFile->addLineCount(count);
     }
 
     this->setToken(STRING);
@@ -438,9 +395,6 @@ void ReadScriptFile::nextToken()
 
   while (true)
   {
-      if ( this->String.length() == 3999 ){
-          this->error("string too long");
-      }
 
       v6 = this->getChar();
 
@@ -482,6 +436,7 @@ void ReadScriptFile::nextToken()
 
       if ( std::isalpha(v6) )
       {
+          this->ungetChar(v6);
           this->retrieveIdentifier();
           return;
 
@@ -494,7 +449,8 @@ void ReadScriptFile::nextToken()
           return;
       }
 
-      if(v6 == '"'){
+      if(v6 == '"')
+      {
           this->ungetChar(v6);
           this->retrieveString();
           return;
