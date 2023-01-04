@@ -252,71 +252,6 @@ bool ReadScriptFile::retrieveNumber()
     return result;
 }
 
-bool ReadScriptFile::retrieveRelationalOperator()
-{
-    int c = 0;
-    if ( this->Special == '<' )
-    {
-        if(!this->getNextSpecial(c)){
-            return false;
-        }
-
-        if ( c == '=' )
-        {
-            this->Special = 'L';
-            this->setToken(SPECIAL);
-            return false;
-
-        }else{
-            if ( c != '>' ){
-                this->ungetChar(c);
-                this->Token = SPECIAL;
-                return false;
-            }
-
-            this->Special = 'N';
-            this->setToken(SPECIAL);
-            return false;
-        }
-    }
-    else if ( this->Special == '>' )
-    {
-        if(!this->getNextSpecial(c)){
-            return false;
-        }
-
-        if ( c == '=' ){
-            this->Special = 'G';
-            this->setToken(SPECIAL);
-            return false;
-        }
-        else{
-             this->ungetChar(c);
-            this->Token = SPECIAL;
-            return false;
-        }
-    }
-    return false;
-}
-
-bool ReadScriptFile::retrieveSeparator()
-{
-    int c = 0;
-    if(!this->getNextSpecial(c)){
-        return false;
-    }
-
-    if ( c == '>' ){
-        this->Special = 'I';
-        this->setToken(SPECIAL);
-        return true;
-    }
-
-    this->ungetChar(c);
-    this->Token = SPECIAL;
-    return false;
-}
-
 bool ReadScriptFile::retrieveString()
 {
     int c = 0;
@@ -333,27 +268,6 @@ bool ReadScriptFile::retrieveString()
     return result;
 }
 
-int ReadScriptFile::getNextChar()
-{
-    int c = this->getChar();
-
-    if ( c == -1 )
-      this->error("unexpected end of file");
-
-    return c;
-}
-
-bool ReadScriptFile::getNextSpecial(int &c)
-{
-    c = this->getChar();
-
-    if ( c == -1 ){
-        this->Token = SPECIAL;
-        return false;
-    }
-
-    return true;
-}
 
 void ReadScriptFile::skipSpace()
 {
@@ -456,38 +370,17 @@ void ReadScriptFile::nextToken()
           return;
       }
 
-      if(v6 == '['){
-          this->Special = '[';
-          v6 = this->getChar();
-
-          if ( v6 == -1 ){
+      if(v6 == '[' || v6 == '<' || v6 == '>' || v6 == '-'){
+          this->ungetChar(v6);
+          ScriptToken *token = new TokenSpecial(*this->scriptFile);
+          if(token->retrieveSpecial(this->Special) >= 0){
               this->Token = SPECIAL;
+              delete token;
               return;
           }
 
-          this->ungetChar(v6);
-          if(!std::isdigit(v6) && v6 != '-'){
-              this->Token = SPECIAL;
-              return;
-          }
-
-          this->ungetChar(v6);
           this->retrieveCoordinate();
-          return;
-      }
-
-      if ( v6 == '<' || v6 == '>')
-      {
-          this->Special = v6;
-          if(!this->retrieveRelationalOperator()){
-              return;
-          }
-      }
-
-      if ( v6 == '-' )
-      {
-          this->Special = '-';
-          this->retrieveSeparator();
+          delete token;
           return;
       }
 

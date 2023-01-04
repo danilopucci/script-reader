@@ -58,15 +58,9 @@ private:
     bool retrieveNumber();
     bool retrieveNumberOrBytes();
     bool retrieveCoordinate();
-    bool retrieveCoordinateSign();
 
-    bool retrieveRelationalOperator();
-    bool retrieveSeparator();
     bool retrieveString();
 
-
-    int getNextChar();
-    bool getNextSpecial(int &c);
 
     void internalClose(int fileIndex = 0);
 
