@@ -6,6 +6,8 @@
 #include <vector>
 #include <fstream>
 
+#include "scriptfile.h"
+
 std::string strLower(std::string a1);
 size_t findLast(const std::string &str, char c);
 
@@ -95,6 +97,9 @@ public:
     int lastGottenCharHistorical[2];
 
     std::fstream* Files[3];
+
+    //test
+    ScriptFile *scriptFile;
 };
 
 

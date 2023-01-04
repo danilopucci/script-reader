@@ -26,7 +26,8 @@ ReadScriptFile::~ReadScriptFile()
 int ReadScriptFile::getChar()
 {
     this->lastGottenCharHistorical[1] = this->lastGottenCharHistorical[0];
-    this->lastGottenChar = this->Files[this->RecursionDepth]->get();
+    //this->lastGottenChar = this->Files[this->RecursionDepth]->get();
+    this->lastGottenChar = this->scriptFile->getChar();
     this->lastGottenCharHistorical[0] = this->lastGottenChar;
     return this->lastGottenChar;
 }
@@ -35,7 +36,8 @@ void ReadScriptFile::ungetChar(int c)
 {
     this->lastGottenCharHistorical[0] = this->lastGottenCharHistorical[1];
     this->lastGottenChar = this->lastGottenCharHistorical[1];
-    this->Files[this->RecursionDepth]->unget();
+    //this->Files[this->RecursionDepth]->unget();
+    this->scriptFile->ungetChar();
 }
 
 void ReadScriptFile::readSymbol(char Symbol)
@@ -163,9 +165,11 @@ LABEL_9:
       this->Filename[this->RecursionDepth] = this->Filename[this->RecursionDepth].substr(0, index + 1).append(FileName);
   }
 
-  this->Files[this->RecursionDepth] = new std::fstream(this->Filename[this->RecursionDepth], std::ios_base::in | std::ios_base::binary);
+  //this->Files[this->RecursionDepth] = new std::fstream(this->Filename[this->RecursionDepth], std::ios_base::in | std::ios_base::binary);
+  this->scriptFile = new ScriptFile(this->Filename[this->RecursionDepth]);
 
-  if ( !this->Files[this->RecursionDepth] )
+  if(!this->scriptFile)
+  //if ( !this->Files[this->RecursionDepth] )
   {
     this->error("TReadScriptFile::open: Rekursionstiefe zu gro");
     this->error(this->Filename[this->RecursionDepth]);
@@ -272,8 +276,6 @@ bool ReadScriptFile::retrieveCoordinateSign()
     return true;
 }
 
-
-
 bool ReadScriptFile::retrieveNumber()
 {
     this->Number = 0;
@@ -371,32 +373,13 @@ bool ReadScriptFile::retrieveSeparator()
 bool ReadScriptFile::retrieveString()
 {
     int c = 0;
-    bool result = true;
+    bool result = false;
+    ScriptToken *token = new TokenString(*this->scriptFile);
+    int count = token->retrieveString(this->String);
+    delete token;
 
-    c = this->getChar();
-
-    if(c != '"'){
-        return false;
-    }
-
-    while((c = this->getChar()) != '"'){
-        if ( c == '\\' )
-        {
-            c = this->getNextChar();
-
-            if ( c == 110 ){
-                this->String.push_back(10);
-            }else{
-                this->String.push_back(c);
-            }
-        }
-        else
-        {
-            if ( c == '\n' )
-                ++this->Line[this->RecursionDepth];
-
-            this->String.push_back(c);
-        }
+    if(count > 0){
+        this->scriptFile->addLine(count);
     }
 
     this->setToken(STRING);
@@ -595,7 +578,8 @@ void ReadScriptFile::error(const std::string &Text)
 void ReadScriptFile::internalClose(int fileIndex)
 {
     int index = fileIndex ? fileIndex : this->RecursionDepth;
-    this->Files[index]->close();
+    //this->Files[index]->close();
+    this->scriptFile->close();
     this->Line[index] = 0;
     --this->RecursionDepth;
 }
