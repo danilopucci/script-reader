@@ -1,11 +1,12 @@
 #include "scripttoken.h"
 
-ScriptToken::ScriptToken()
+ScriptToken::ScriptToken(StreamBuffer& streamBuffer) :
+    streamBuffer(streamBuffer)
 {
 }
 
 TokenNumber::TokenNumber(StreamBuffer& streamBuffer) :
-    streamBuffer(streamBuffer)
+    ScriptToken(streamBuffer)
 {
     this->type = ScriptTokenType::aNUMBER;
 }
@@ -37,7 +38,7 @@ int TokenNumber::retrieveNumber(int& number){
 }
 
 TokenString::TokenString(StreamBuffer& streamBuffer) :
-    streamBuffer(streamBuffer)
+    ScriptToken(streamBuffer)
 {
     this->type = ScriptTokenType::aSTRING;
 }
@@ -50,6 +51,7 @@ int TokenString::retrieveString(std::string& str)
     c = this->streamBuffer.getChar();
 
     if(c != '"'){
+        result = -1;
         this->error("retrieveString; syntax error; '\"' expected");
         return result;
     }
@@ -75,7 +77,9 @@ int TokenString::retrieveString(std::string& str)
         }
 
         if(str.length() >= MAX_STRING_LENGHT){
+            result = -1;
             this->error("retrieveString; string too long");
+            return result;
         }
     }
 
@@ -83,7 +87,7 @@ int TokenString::retrieveString(std::string& str)
 }
 
 TokenCoordinate::TokenCoordinate(StreamBuffer& streamBuffer) :
-    streamBuffer(streamBuffer), TokenNumber(streamBuffer)
+    TokenNumber(streamBuffer)
 {
     this->type = ScriptTokenType::aCOORDINATE;
 }
@@ -147,6 +151,7 @@ int TokenCoordinate::retrieveSign(int &sign)
       if ( c != '-' ){
         result = -1;
         this->error("retrieveSign; syntax error; '-' expected");
+        return result;
       }
 
       sign = -1;

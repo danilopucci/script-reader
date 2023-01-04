@@ -15,38 +15,37 @@ enum ScriptTokenType{
 
 
 class ScriptToken{
-public:
-    ScriptToken();
 
-    ScriptTokenType type;
+public:
+    ScriptToken(StreamBuffer& streamBuffer);
 
     virtual int retrieveNumber(int &number) { return 0; };
     virtual int retrieveString(std::string &str) { return 0; };
     virtual int retrieveCoordinate(int &x, int &y, int &z){ return 0; };
 
     void error(const std::string& err){ throw std::logic_error(err); }
+
+    ScriptTokenType type;
+
+protected:
+    StreamBuffer& streamBuffer;
 };
 
 
 class TokenNumber : public ScriptToken {
+
 public:
     TokenNumber(StreamBuffer &streamBuffer);
-
     int retrieveNumber(int &number);
-
-private:
-    StreamBuffer& streamBuffer;
 };
 
 
 class TokenString : public ScriptToken {
+
 public:
     TokenString(StreamBuffer &streamBuffer);
-
     int retrieveString(std::string &str);
 
-private:
-    StreamBuffer& streamBuffer;
     const int MAX_STRING_LENGHT = 4000;
 };
 
@@ -59,8 +58,7 @@ public:
 
 private:
     int retrieveSign(int &sign);
-private:
-    StreamBuffer& streamBuffer;
+
 };
 
 #endif // SCRIPTTOKEN_H
