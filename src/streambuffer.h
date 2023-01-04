@@ -13,18 +13,20 @@ public:
 
 
     virtual int getChar() {
-        std::cout << "StreamBuffer::getChar" << std::endl;
         return 0;
     }
 
     virtual void ungetChar(){
-        std::cout << "StreamBuffer::ungetChar" << std::endl;
+
     }
 
     virtual char nextChar() {
         char ch = getChar();
-        ungetChar();
-        std::cout << "StreamBuffer::nextChar" << std::endl;
+
+        if(ch != -1){
+            ungetChar();
+        }
+
         return ch;
     }
 };

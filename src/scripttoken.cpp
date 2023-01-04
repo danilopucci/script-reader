@@ -193,3 +193,140 @@ int TokenIdentifier::retrieveIdentifier(std::string& identifier)
 
     return result;
 }
+
+TokenSpecial::TokenSpecial(StreamBuffer& streamBuffer) :
+    ScriptToken(streamBuffer)
+{
+    this->type = ScriptTokenType::aSPECIAL;
+}
+
+int TokenSpecial::retrieveSpecial(char &special)
+{
+    int c = this->streamBuffer.getChar();
+    int result = -1;
+
+    if(c == '['){
+        special = c;
+
+        c = this->streamBuffer.getChar();
+
+        if(c == -1){
+            result = 0;
+            return result;
+        }
+
+        if(!std::isdigit(c) && c != '-'){
+            this->streamBuffer.ungetChar();
+            result = 0;
+            return result;
+        }
+
+        this->streamBuffer.ungetChar();
+        this->streamBuffer.ungetChar();
+        result = -1;
+        return result;
+    }
+
+    if (c == '<' || c == '>')
+    {
+        special = c;
+        this->streamBuffer.ungetChar();
+        result = this->retrieveRelationalOperator(special);
+
+        return result;
+    }
+
+    if(c == '-'){
+        special = c;
+        this->streamBuffer.ungetChar();
+        result = this->retrieveSeparator(special);
+
+        return result;
+    }
+
+    special = c;
+    result = 0;
+    return result;
+}
+
+int TokenSpecial::retrieveRelationalOperator(char &relationalOperator)
+{
+    int c = this->streamBuffer.getChar();
+    int result = 0;
+
+    if ( c == '<' )
+    {
+        c = this->streamBuffer.getChar();
+
+        if(c == -1){
+            result = 0;
+            return result;
+        }
+
+        if(c == '='){
+            relationalOperator = 'L';
+            result = 0;
+            return result;
+        }
+
+        if(c == '>'){
+            relationalOperator = 'N';
+            result = 0;
+            return result;
+        }
+
+        relationalOperator = '<';
+        this->streamBuffer.ungetChar();
+        result = 0;
+        return result;
+    }
+
+    if ( c == '>' )
+    {
+        c = this->streamBuffer.getChar();
+
+        if(c == -1){
+            result = 0;
+            return result;
+        }
+
+        if(c == '='){
+            relationalOperator = 'G';
+            result = 0;
+            return result;
+        }
+
+        relationalOperator = '>';
+        this->streamBuffer.ungetChar();
+        result = 0;
+        return result;
+    }
+
+    result = 0;
+    return result;
+}
+
+int TokenSpecial::retrieveSeparator(char &separator)
+{
+    int c = this->streamBuffer.getChar();
+    int result = 0;
+
+    if(c == '-'){
+
+        c = this->streamBuffer.getChar();
+        if(c == -1){
+            result = -1;
+            return result;
+        }
+
+        if ( c == '>' ){
+            separator = 'I';
+            result = 0;
+            return result;
+        }
+    }
+
+    result = -1;
+    this->streamBuffer.ungetChar();
+    return result;
+}
