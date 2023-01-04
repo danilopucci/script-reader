@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <cctype>
 #include <limits>
+#include "scriptfile.h"
+#include "scripttoken.h"
 
 ReadScriptFile::ReadScriptFile()
 {
@@ -233,26 +235,14 @@ bool ReadScriptFile::retrieveNumberOrBytes()
 
 bool ReadScriptFile::retrieveCoordinate()
 {
-    if(this->getChar() != '['){
-        return false;
-    }
+    ScriptToken *token = new TokenCoordinate(*this->scriptFile);
 
-    this->retrieveCoordinateSign();
-    this->retrieveNumber();
-    this->CoordX = this->Number * this->Sign;
-    this->getNextChar();
-
-    this->retrieveCoordinateSign();
-    this->retrieveNumber();
-    this->CoordY = this->Number * this->Sign;
-    this->getNextChar();
-
-    this->retrieveCoordinateSign();
-    this->retrieveNumber();
-    this->CoordZ = this->Number * this->Sign;
+    token->retrieveCoordinate(this->CoordX, this->CoordY, this->CoordZ);
+    delete token;
 
     this->setToken(COORDINATE);
     return true;
+
 }
 
 bool ReadScriptFile::retrieveCoordinateSign()

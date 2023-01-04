@@ -98,7 +98,6 @@ public:
 
     std::fstream* Files[3];
 
-    //test
     ScriptFile *scriptFile;
 };
 

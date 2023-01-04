@@ -21,6 +21,7 @@ int TokenNumber::retrieveNumber(int& number){
 
         if ( c == -1 ){
             result = -1;
+            this->error("retrieveNumber; unexpected end of file");
             break;
         }
 
@@ -49,6 +50,7 @@ int TokenString::retrieveString(std::string& str)
     c = this->streamBuffer.getChar();
 
     if(c != '"'){
+        this->error("retrieveString; syntax error; '\"' expected");
         return result;
     }
 
@@ -71,8 +73,84 @@ int TokenString::retrieveString(std::string& str)
 
             str.push_back(c);
         }
+
+        if(str.length() >= MAX_STRING_LENGHT){
+            this->error("retrieveString; string too long");
+        }
     }
 
     return result;
 }
 
+TokenCoordinate::TokenCoordinate(StreamBuffer& streamBuffer) :
+    streamBuffer(streamBuffer), TokenNumber(streamBuffer)
+{
+    this->type = ScriptTokenType::aCOORDINATE;
+}
+
+int TokenCoordinate::retrieveCoordinate(int &x, int &y, int &z)
+{
+    int result = 0;
+
+    if(this->streamBuffer.getChar() != '['){
+        result = -1;
+        this->error("retrieveCoordinate; syntax error; '[' expected");
+        return result;
+    }
+
+    int number = 0;
+    int sign = 1;
+
+    this->retrieveSign(sign);
+    this->retrieveNumber(number);
+    x = number * sign;
+
+    if(this->streamBuffer.getChar() != ','){
+        result = -1;
+        this->error("retrieveCoordinate; syntax error; ',' expected");
+        return result;
+    }
+
+    this->retrieveSign(sign);
+    this->retrieveNumber(number);
+    y = number * sign;
+
+    if(this->streamBuffer.getChar() != ','){
+        result = -1;
+        this->error("retrieveCoordinate; syntax error; ',' expected");
+        return result;
+    }
+
+    this->retrieveSign(sign);
+    this->retrieveNumber(number);
+    z = number * sign;
+
+    if(this->streamBuffer.getChar() != ']'){
+        result = -1;
+        this->error("retrieveCoordinate; syntax error; ']' expected");
+        return result;
+    }
+
+    return result;
+}
+
+int TokenCoordinate::retrieveSign(int &sign)
+{
+    int result = 0;
+    int c = this->streamBuffer.getChar();
+
+    if ( std::isdigit(c) ){
+      sign = 1;
+      this->streamBuffer.ungetChar();
+    }else{
+
+      if ( c != '-' ){
+        result = -1;
+        this->error("retrieveSign; syntax error; '-' expected");
+      }
+
+      sign = -1;
+    }
+
+    return result;
+}
