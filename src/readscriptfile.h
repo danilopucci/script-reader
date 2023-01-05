@@ -61,11 +61,7 @@ private:
 
     bool retrieveString();
 
-
     void internalClose(int fileIndex = 0);
-
-    int getChar();
-    void ungetChar(int c);
 
     void skipLine();
     void skipSpace();
@@ -84,14 +80,7 @@ public:
     std::string Filename[3];
     char ErrorString[100];
 
-    int Sign;
-
-
-    int lastGottenChar;
-    int lastGottenCharHistorical[2];
-
     ScriptFile* Files[3];
-
     ScriptFile *scriptFile;
 };
 

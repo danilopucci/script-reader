@@ -9,7 +9,7 @@ class ScriptFile : public StreamBuffer
 {
 public:
     ScriptFile();
-    ScriptFile(const std::string& filename);
+    ScriptFile(const std::string& fileNamePath);
     ~ScriptFile();
 
     bool open();
@@ -23,8 +23,13 @@ public:
     int popLineCount();
     int resetLineCount();
     int getLineCount();
+
+    std::string getFileName();
 private:
-    std::string filename;
+    void setFileName();
+
+    std::string fileName;
+    std::string fileNamePath;
     std::fstream* file;
     int lineCount;
 

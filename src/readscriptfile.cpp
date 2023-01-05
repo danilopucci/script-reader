@@ -6,6 +6,17 @@
 #include "scriptfile.h"
 #include "scripttoken.h"
 
+/*
+talvez criar uma classe de stream com implementacoes de skip
+fazer classe de File com funcoes basicas de open/close/getpath/line
+verificar necessidade dos gets, reads da readScriptFile
+organizar o acesso do recursion nos Files[]. Talvez criar funcao que acesse diretamente o atual
+checar como era implementada as exceptions e recoloca-las
+- verificar exceptions dos files
+colocar em bloco try-catch
+
+*/
+
 ReadScriptFile::ReadScriptFile()
 {
     this->RecursionDepth = -1;
@@ -13,7 +24,6 @@ ReadScriptFile::ReadScriptFile()
     this->Bytes.reserve(4);
     this->String.reserve(4000);
 
-    this->Sign = 1;
 }
 
 ReadScriptFile::~ReadScriptFile()
@@ -23,23 +33,6 @@ ReadScriptFile::~ReadScriptFile()
     error("TReadScriptFile::~TReadScriptFile: Datei ist noch offen.\n");
     this->closeAll();
   }
-}
-
-int ReadScriptFile::getChar()
-{
-    this->lastGottenCharHistorical[1] = this->lastGottenCharHistorical[0];
-    //this->lastGottenChar = this->Files[this->RecursionDepth]->get();
-    this->lastGottenChar = this->scriptFile->getChar();
-    this->lastGottenCharHistorical[0] = this->lastGottenChar;
-    return this->lastGottenChar;
-}
-
-void ReadScriptFile::ungetChar(int c)
-{
-    this->lastGottenCharHistorical[0] = this->lastGottenCharHistorical[1];
-    this->lastGottenChar = this->lastGottenCharHistorical[1];
-    //this->Files[this->RecursionDepth]->unget();
-    this->scriptFile->ungetChar();
 }
 
 void ReadScriptFile::readSymbol(char Symbol)
@@ -200,13 +193,13 @@ bool ReadScriptFile::retrieveNumberOrBytes()
     this->retrieveNumber();
     this->Bytes.emplace_back(this->Number);
 
-    while(this->getChar() == '-'){
+    while(this->scriptFile->getChar() == '-'){
         this->retrieveNumber();
         this->Bytes.emplace_back(this->Number);
         this->Token = BYTES;
     }
 
-    this->ungetChar(this->lastGottenChar);
+    this->scriptFile->ungetChar();
     return false;
 }
 
@@ -230,7 +223,7 @@ bool ReadScriptFile::retrieveNumber()
 
     while(true){
 
-        v6 = this->getChar();
+        v6 = this->scriptFile->getChar();
 
         if ( v6 == -1 ){
             result = false;
@@ -240,7 +233,7 @@ bool ReadScriptFile::retrieveNumber()
         if ( std::isdigit(v6) ){
             this->Number = v6 + 10 * this->Number - '0';
         }else{
-            this->ungetChar(v6);
+            this->scriptFile->ungetChar();
             result = false;
             break;
         }
@@ -274,17 +267,17 @@ void ReadScriptFile::skipSpace()
 {
     int c;
     do{
-        c = this->getChar();
+        c = this->scriptFile->getChar();
     }while(std::isspace(c));
 
-    this->ungetChar(c);
+    this->scriptFile->ungetChar();
 }
 
 void ReadScriptFile::skipLine()
 {
     int c;
     do{
-        c = this->getChar();
+        c = this->scriptFile->getChar();
     }while(c != '\n');
 
     this->scriptFile->pushLineCount();
@@ -303,7 +296,6 @@ void ReadScriptFile::nextToken()
   int v6 = 0;
 
   this->Number = 0;
-  this->Sign = 1;
 
   this->Bytes.clear();
   this->String.clear();
@@ -311,7 +303,7 @@ void ReadScriptFile::nextToken()
   while (true)
   {
 
-      v6 = this->getChar();
+      v6 = this->scriptFile->getChar();
 
       if ( v6 == -1 ){
           if ( this->RecursionDepth <= 0 ){
@@ -330,7 +322,7 @@ void ReadScriptFile::nextToken()
       }
 
       if(std::isspace(v6)){
-          this->ungetChar(v6);
+          this->scriptFile->ungetChar();
           this->skipSpace();
           continue;
       }
@@ -351,7 +343,7 @@ void ReadScriptFile::nextToken()
 
       if ( std::isalpha(v6) )
       {
-          this->ungetChar(v6);
+          this->scriptFile->ungetChar();
           this->retrieveIdentifier();
           return;
 
@@ -359,20 +351,20 @@ void ReadScriptFile::nextToken()
 
       if ( std::isdigit(v6) )
       {
-          this->ungetChar(v6);
+          this->scriptFile->ungetChar();
           this->retrieveNumberOrBytes();
           return;
       }
 
       if(v6 == '"')
       {
-          this->ungetChar(v6);
+          this->scriptFile->ungetChar();
           this->retrieveString();
           return;
       }
 
       if(v6 == '[' || v6 == '<' || v6 == '>' || v6 == '-'){
-          this->ungetChar(v6);
+          this->scriptFile->ungetChar();
           ScriptToken *token = new TokenSpecial(*this->scriptFile);
           if(token->retrieve(this->Special) >= 0){
               this->Token = SPECIAL;
@@ -398,21 +390,13 @@ void ReadScriptFile::setToken(TOKEN token)
     this->Token = token;
 }
 
-void ReadScriptFile::error(const std::string &Text)
+void ReadScriptFile::error(const std::string &err)
 {
-  size_t index; // eax
-  const char *v3; // ecx
-
-  index = findLast(this->Filename[this->RecursionDepth], '/');
-  if ( index ){
-    v3 = &this->Filename[this->RecursionDepth].at(index + 1);
-  }else{
-    v3 = this->Filename[this->RecursionDepth].c_str();
-  }
-
-  snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", v3, this->scriptFile->getLineCount(), Text.c_str());
+  snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", this->scriptFile->getFileName().c_str(), this->scriptFile->getLineCount(), err.c_str());
 
   this->closeAll();
+
+  throw std::logic_error(this->ErrorString);
 }
 
 void ReadScriptFile::internalClose(int fileIndex)
@@ -440,8 +424,7 @@ void ReadScriptFile::close()
 void ReadScriptFile::closeAll()
 {
     int recursion = this->RecursionDepth;
-    for (int i = 0; i < recursion; i++ )
-    {
+    for (int i = 0; i < recursion; i++ ){
       this->internalClose();
     }
 }
@@ -459,9 +442,7 @@ std::string strLower(std::string a1)
 
 size_t findLast(const std::string& str, char c)
 {
-  size_t index = 0;
-
-  index = str.find_last_of(c);
+  size_t index = str.find_last_of(c);
 
   if(index == std::string::npos){
       index = 0;

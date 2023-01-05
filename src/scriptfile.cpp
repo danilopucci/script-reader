@@ -5,18 +5,21 @@ ScriptFile::ScriptFile()
     this->lineCount = 1;
 }
 
-ScriptFile::ScriptFile(const std::string& filename)
+ScriptFile::ScriptFile(const std::string& fileNamePath)
 {
     this->lineCount = 1;
-    this->filename = filename;
+    this->fileNamePath = fileNamePath;
 
-    file = new std::fstream(this->filename, std::ios_base::in | std::ios_base::binary);
+    file = new std::fstream(this->fileNamePath, std::ios_base::in | std::ios_base::binary);
+
+    this->setFileName();
 }
 
 ScriptFile::~ScriptFile()
 {
     this->lineCount = 1;
-    this->filename = "";
+    this->fileNamePath = "";
+    this->fileName = "";
     delete file;
 }
 
@@ -24,7 +27,7 @@ bool ScriptFile::open()
 {
     if(this->file != nullptr)
     {
-        this->file = new std::fstream(this->filename, std::ios_base::in | std::ios_base::binary);
+        this->file = new std::fstream(this->fileNamePath, std::ios_base::in | std::ios_base::binary);
         return true;
     }
     return false;
@@ -69,4 +72,20 @@ int ScriptFile::resetLineCount()
 int ScriptFile::getLineCount()
 {
     return this->lineCount;
+}
+
+void ScriptFile::setFileName()
+{
+    size_t index = this->fileNamePath.find_last_of('/');
+
+    if(index != std::string::npos){
+        this->fileName = this->fileNamePath.substr(index + 1);
+    }else{
+        this->fileName = this->fileNamePath;
+    }
+}
+
+std::string ScriptFile::getFileName()
+{
+    return this->fileName;
 }
