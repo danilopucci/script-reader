@@ -59,6 +59,12 @@ int TokenString::retrieve(std::string& str, int &count)
 
     while((c = this->streamBuffer.getChar()) != '"'){
 
+        if(c == -1){
+            result = -1;
+            this->error("retrieveString; unexpected end of file");
+            return result;
+        }
+
         if ( c == '\\' ){
             c = this->streamBuffer.getChar();
 
@@ -143,6 +149,11 @@ int TokenCoordinate::retrieveSign(int &sign)
 {
     int result = 0;
     int c = this->streamBuffer.getChar();
+
+    if(c == -1){
+        result = -1;
+        this->error("retrieveSign; unexpected end of file");
+    }
 
     if ( std::isdigit(c) ){
       sign = 1;
@@ -299,6 +310,11 @@ int TokenSpecial::retrieveRelationalOperator(char &relationalOperator)
 
         relationalOperator = '>';
         this->streamBuffer.ungetChar();
+        result = 0;
+        return result;
+    }
+
+    if(c == -1){
         result = 0;
         return result;
     }
