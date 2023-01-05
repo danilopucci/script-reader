@@ -19,11 +19,11 @@ class ScriptToken{
 public:
     ScriptToken(StreamBuffer& streamBuffer);
 
-    virtual int retrieveNumber(int &number) { return 0; };
-    virtual int retrieveString(std::string &str) { return 0; };
-    virtual int retrieveCoordinate(int &x, int &y, int &z){ return 0; };
-    virtual int retrieveIdentifier(std::string& identifier){ return 0; }
-    virtual int retrieveSpecial(char &special){ return 0; }
+    virtual int retrieve(int &number) { return 0; };
+    virtual int retrieve(std::string &str, int& count) { return 0; };
+    virtual int retrieve(int &x, int &y, int &z){ return 0; };
+    virtual int retrieve(std::string& identifier){ return 0; }
+    virtual int retrieve(char &special){ return 0; }
 
     void error(const std::string& err){ throw std::logic_error(err); }
 
@@ -39,7 +39,7 @@ class TokenNumber : public ScriptToken {
 public:
     TokenNumber(StreamBuffer &streamBuffer);
 
-    int retrieveNumber(int &number);
+    int retrieve(int &number);
 };
 
 
@@ -48,7 +48,7 @@ class TokenString : public ScriptToken {
 public:
     TokenString(StreamBuffer &streamBuffer);
 
-    int retrieveString(std::string &str);
+    int retrieve(std::string &str, int &count);
 
 private:
     const int MAX_STRING_LENGHT = 4000;
@@ -60,7 +60,8 @@ class TokenCoordinate : public TokenNumber {
 public:
     TokenCoordinate(StreamBuffer &streamBuffer);
 
-    int retrieveCoordinate(int &x, int &y, int &z);
+    int retrieve(int &x, int &y, int &z);
+    int retrieve(int &number) { return TokenNumber::retrieve(number); }
 
 private:
     int retrieveSign(int &sign);
@@ -72,7 +73,7 @@ class TokenIdentifier : public ScriptToken {
 public:
     TokenIdentifier(StreamBuffer &streamBuffer);
 
-    int retrieveIdentifier(std::string& identifier);
+    int retrieve(std::string& identifier);
 
 private:
     const int MAX_IDENTIFIER_LENGHT = 30;
@@ -84,7 +85,7 @@ class TokenSpecial : public ScriptToken {
 public:
     TokenSpecial(StreamBuffer &streamBuffer);
 
-    int retrieveSpecial(char &special);
+    int retrieve(char &special);
 
 private:
     int retrieveRelationalOperator(char &relationalOperator);

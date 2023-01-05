@@ -167,11 +167,9 @@ LABEL_9:
       this->Filename[this->RecursionDepth] = this->Filename[this->RecursionDepth].substr(0, index + 1).append(FileName);
   }
 
-  //this->Files[this->RecursionDepth] = new std::fstream(this->Filename[this->RecursionDepth], std::ios_base::in | std::ios_base::binary);
   this->scriptFile = this->Files[this->RecursionDepth] = new ScriptFile(this->Filename[this->RecursionDepth]);
 
   if(!this->scriptFile)
-  //if ( !this->Files[this->RecursionDepth] )
   {
     this->error("TReadScriptFile::open: Rekursionstiefe zu gro");
     this->error(this->Filename[this->RecursionDepth]);
@@ -181,7 +179,7 @@ LABEL_9:
     this->error("Cannot open script-file");
     goto LABEL_9;
   }
-  //this->Line[this->RecursionDepth] = 1;
+
 }
 
 bool ReadScriptFile::retrieveIdentifier()
@@ -189,7 +187,7 @@ bool ReadScriptFile::retrieveIdentifier()
     bool result = true;
 
     ScriptToken *token = new TokenIdentifier(*this->scriptFile);
-    token->retrieveIdentifier(this->String);
+    token->retrieve(this->String);
     delete token;
 
     this->setToken(IDENTIFIER);
@@ -216,7 +214,7 @@ bool ReadScriptFile::retrieveCoordinate()
 {
     ScriptToken *token = new TokenCoordinate(*this->scriptFile);
 
-    token->retrieveCoordinate(this->CoordX, this->CoordY, this->CoordZ);
+    token->retrieve(this->CoordX, this->CoordY, this->CoordZ);
     delete token;
 
     this->setToken(COORDINATE);
@@ -257,8 +255,8 @@ bool ReadScriptFile::retrieveString()
     int c = 0;
     bool result = false;
     ScriptToken *token = new TokenString(*this->scriptFile);
-    //int count = token->retrieveString(this->String);
-    int count = token->retrieve(this->String);
+    int count = 0;
+    token->retrieve(this->String, count);
     delete token;
 
     if(count > 0){
@@ -376,7 +374,7 @@ void ReadScriptFile::nextToken()
       if(v6 == '[' || v6 == '<' || v6 == '>' || v6 == '-'){
           this->ungetChar(v6);
           ScriptToken *token = new TokenSpecial(*this->scriptFile);
-          if(token->retrieveSpecial(this->Special) >= 0){
+          if(token->retrieve(this->Special) >= 0){
               this->Token = SPECIAL;
               delete token;
               return;

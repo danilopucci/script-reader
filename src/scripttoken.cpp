@@ -11,7 +11,7 @@ TokenNumber::TokenNumber(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::aNUMBER;
 }
 
-int TokenNumber::retrieveNumber(int& number){
+int TokenNumber::retrieve(int& number){
     number = 0;
     int c = 0;
     int result = 0;
@@ -43,10 +43,11 @@ TokenString::TokenString(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::aSTRING;
 }
 
-int TokenString::retrieveString(std::string& str)
+int TokenString::retrieve(std::string& str, int &count)
 {
     int c = 0;
-    int result = -1;
+    int result = 0;
+    count = 0;
 
     c = this->streamBuffer.getChar();
 
@@ -70,7 +71,7 @@ int TokenString::retrieveString(std::string& str)
         }else{
             //count the number of lines found
             if ( c == '\n' ){
-                result++;
+                count++;
             }
 
             str.push_back(c);
@@ -92,7 +93,7 @@ TokenCoordinate::TokenCoordinate(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::aCOORDINATE;
 }
 
-int TokenCoordinate::retrieveCoordinate(int &x, int &y, int &z)
+int TokenCoordinate::retrieve(int &x, int &y, int &z)
 {
     int result = 0;
 
@@ -106,7 +107,7 @@ int TokenCoordinate::retrieveCoordinate(int &x, int &y, int &z)
     int sign = 1;
 
     this->retrieveSign(sign);
-    this->retrieveNumber(number);
+    this->retrieve(number);
     x = number * sign;
 
     if(this->streamBuffer.getChar() != ','){
@@ -116,7 +117,7 @@ int TokenCoordinate::retrieveCoordinate(int &x, int &y, int &z)
     }
 
     this->retrieveSign(sign);
-    this->retrieveNumber(number);
+    this->retrieve(number);
     y = number * sign;
 
     if(this->streamBuffer.getChar() != ','){
@@ -126,7 +127,7 @@ int TokenCoordinate::retrieveCoordinate(int &x, int &y, int &z)
     }
 
     this->retrieveSign(sign);
-    this->retrieveNumber(number);
+    this->retrieve(number);
     z = number * sign;
 
     if(this->streamBuffer.getChar() != ']'){
@@ -166,7 +167,7 @@ TokenIdentifier::TokenIdentifier(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::aIDENTIFIER;
 }
 
-int TokenIdentifier::retrieveIdentifier(std::string& identifier)
+int TokenIdentifier::retrieve(std::string& identifier)
 {
     int c = 0;
     int result = 0;
@@ -200,7 +201,7 @@ TokenSpecial::TokenSpecial(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::aSPECIAL;
 }
 
-int TokenSpecial::retrieveSpecial(char &special)
+int TokenSpecial::retrieve(char &special)
 {
     int c = this->streamBuffer.getChar();
     int result = -1;

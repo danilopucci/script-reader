@@ -21,7 +21,8 @@ public:
     int pushLineCount();
     int addLineCount(int count);
     int popLineCount();
-
+    int resetLineCount();
+    int getLineCount();
 private:
     std::string filename;
     std::fstream* file;
