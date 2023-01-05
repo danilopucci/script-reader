@@ -25,11 +25,14 @@ public:
     int getLineCount();
 
     std::string getFileName();
+    std::string getFilePath();
 private:
     void setFileName();
+    void setFilePath();
 
     std::string fileName;
     std::string fileNamePath;
+    std::string filePath;
     std::fstream* file;
     int lineCount;
 

@@ -13,6 +13,7 @@ ScriptFile::ScriptFile(const std::string& fileNamePath)
     file = new std::fstream(this->fileNamePath, std::ios_base::in | std::ios_base::binary);
 
     this->setFileName();
+    this->setFilePath();
 }
 
 ScriptFile::~ScriptFile()
@@ -88,4 +89,20 @@ void ScriptFile::setFileName()
 std::string ScriptFile::getFileName()
 {
     return this->fileName;
+}
+
+void ScriptFile::setFilePath()
+{
+    size_t index = this->fileNamePath.find_last_of('/');
+
+    if(index != std::string::npos){
+        this->filePath = this->fileNamePath.substr(0, index + 1);
+    }else{
+        this->filePath = this->fileNamePath;
+    }
+}
+
+std::string ScriptFile::getFilePath()
+{
+    return this->filePath;
 }

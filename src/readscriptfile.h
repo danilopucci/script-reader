@@ -9,7 +9,6 @@
 #include "scriptfile.h"
 
 std::string strLower(std::string a1);
-size_t findLast(const std::string &str, char c);
 
 enum TOKEN{
     ENDOFFILE        = 0,

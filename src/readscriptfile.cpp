@@ -137,10 +137,9 @@ uint8_t* ReadScriptFile::getBytesequence()
   return this->Bytes.data();
 }
 
-void ReadScriptFile::open(const std::string& FileName)
+void ReadScriptFile::open(const std::string& name)
 {
-  size_t index; // eax
-
+  std::string fileName = name;
   this->RecursionDepth += 1;
   if ( this->RecursionDepth == 3 )
   {
@@ -148,24 +147,17 @@ void ReadScriptFile::open(const std::string& FileName)
     this->error("Recursion depth too high");
   }
 LABEL_9:
-  if ( this->RecursionDepth <= 0 || FileName.front() == '/'
-
-    || ( this->Filename[this->RecursionDepth] = std::string(this->Filename[this->RecursionDepth-1]),
-        (index = findLast(this->Filename[this->RecursionDepth], '/')) == 0) )
+  if ( this->RecursionDepth > 0 || fileName.front() != '/')
   {
-    this->Filename[this->RecursionDepth] = FileName;
-  }
-  else
-  {
-      this->Filename[this->RecursionDepth] = this->Filename[this->RecursionDepth].substr(0, index + 1).append(FileName);
+      fileName = this->scriptFile->getFilePath() + fileName;
   }
 
-  this->scriptFile = this->Files[this->RecursionDepth] = new ScriptFile(this->Filename[this->RecursionDepth]);
+  this->scriptFile = this->Files[this->RecursionDepth] = new ScriptFile(fileName);
 
   if(!this->scriptFile)
   {
     this->error("TReadScriptFile::open: Rekursionstiefe zu gro");
-    this->error(this->Filename[this->RecursionDepth]);
+    this->error(fileName);
 
     --this->RecursionDepth;
 
@@ -438,15 +430,4 @@ std::string strLower(std::string a1)
     }
 
     return lowerStr;
-}
-
-size_t findLast(const std::string& str, char c)
-{
-  size_t index = str.find_last_of(c);
-
-  if(index == std::string::npos){
-      index = 0;
-  }
-
-  return index;
 }
