@@ -49,7 +49,7 @@ public:
     void closeAll();
 
     void error(const std::string &Text);
-
+    void printError(const std::string &err);
 private:
     void setToken(TOKEN token);
 
@@ -66,6 +66,8 @@ private:
     void skipSpace();
 public:
 //private:
+    static const int MAX_RECURSION_DEPTH = 3;
+
     TOKEN Token;
     char Special;
     int RecursionDepth;
@@ -76,11 +78,12 @@ public:
     int CoordY;
     int CoordZ;
 
-    std::string Filename[3];
     char ErrorString[100];
 
-    ScriptFile* Files[3];
+    ScriptFile* Files[MAX_RECURSION_DEPTH];
     ScriptFile *scriptFile;
+
+
 };
 
 

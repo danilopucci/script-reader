@@ -30,7 +30,7 @@ ReadScriptFile::~ReadScriptFile()
 {
   if ( this->RecursionDepth != -1 )
   {
-    error("TReadScriptFile::~TReadScriptFile: Datei ist noch offen.\n");
+    this->printError("TReadScriptFile::~TReadScriptFile: Datei ist noch offen.\n");
     this->closeAll();
   }
 }
@@ -141,30 +141,30 @@ void ReadScriptFile::open(const std::string& name)
 {
   std::string fileName = name;
   this->RecursionDepth += 1;
-  if ( this->RecursionDepth == 3 )
+  if ( this->RecursionDepth >= MAX_RECURSION_DEPTH )
   {
-    this->error("TReadScriptFile::open: Rekursionstiefe zu gro");
+    this->printError("TReadScriptFile::open: Rekursionstiefe zu gro");
     this->error("Recursion depth too high");
   }
-LABEL_9:
+
   if ( this->RecursionDepth > 0 || fileName.front() != '/')
   {
       fileName = this->scriptFile->getFilePath() + fileName;
   }
 
-  this->scriptFile = this->Files[this->RecursionDepth] = new ScriptFile(fileName);
+  this->Files[this->RecursionDepth] = new ScriptFile(fileName);
 
-  if(!this->scriptFile)
+  if(!this->Files[this->RecursionDepth]->open())
   {
-    this->error("TReadScriptFile::open: Rekursionstiefe zu gro");
+    this->printError("TReadScriptFile::open: Kann Datei " + fileName + " nicht ");
     this->error(fileName);
 
     --this->RecursionDepth;
 
     this->error("Cannot open script-file");
-    goto LABEL_9;
   }
 
+  this->scriptFile = this->Files[this->RecursionDepth];
 }
 
 bool ReadScriptFile::retrieveIdentifier()
@@ -280,7 +280,7 @@ void ReadScriptFile::nextToken()
 
   if ( this->RecursionDepth == -1 )
   {
-    this->error("TReadScriptFile::nextToken: Kein Skript zum Lesen ge");
+    this->printError("TReadScriptFile::nextToken: Kein Skript zum Lesen ge");
     this->Token = ENDOFFILE;
     return;
   }
@@ -375,6 +375,8 @@ void ReadScriptFile::nextToken()
 
 
   }
+
+  this->printError("TReadScriptFile::nextToken: Ung");
 }
 
 void ReadScriptFile::setToken(TOKEN token)
@@ -387,15 +389,24 @@ void ReadScriptFile::error(const std::string &err)
   snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", this->scriptFile->getFileName().c_str(), this->scriptFile->getLineCount(), err.c_str());
 
   this->closeAll();
+  this->printError(this->ErrorString);
 
   throw std::logic_error(this->ErrorString);
+}
+
+void ReadScriptFile::printError(const std::string &err)
+{
+    std::cout << err << std::endl;
 }
 
 void ReadScriptFile::internalClose(int fileIndex)
 {
     int index = fileIndex ? fileIndex : this->RecursionDepth;
     this->Files[index]->resetLineCount();
-    this->Files[index]->close();
+
+    if(!this->Files[index]->close()){
+        this->printError("TReadScriptFile::close: Fehler %d beim Schlie");
+    }
 
     --this->RecursionDepth;
     this->scriptFile = this->Files[this->RecursionDepth];
@@ -405,7 +416,7 @@ void ReadScriptFile::close()
 {
   if ( this->RecursionDepth == -1 )
   {
-    this->error("TReadScriptFile::close: Keine Datei offen.\n");
+    this->printError("TReadScriptFile::~TReadScriptFile: Datei ist noch offen.");
   }
   else
   {
