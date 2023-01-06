@@ -264,6 +264,8 @@ bool ReadScriptFile::skipChars()
         result = true;
         return result;
     }
+
+    return result;
 }
 
 bool ReadScriptFile::skipSpace()
