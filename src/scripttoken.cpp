@@ -11,23 +11,24 @@ TokenNumber::TokenNumber(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::TOKEN_NUMBER;
 }
 
-int TokenNumber::retrieve(int& number){
+bool TokenNumber::retrieve(int& number){
     number = 0;
     int c = 0;
-    int result = 0;
+    bool result = false;
 
     while(true){
 
         c = this->streamBuffer.getChar();
 
         if ( c == -1 ){
-            result = -1;
-            this->error("retrieveNumber; unexpected end of file");
+            result = false;
+            this->error("TokenNumber::retrieve; unexpected end of file");
             break;
         }
 
         if ( std::isdigit(c) ){
             number = c + 10 * number - '0';
+            result = true;
         }else{
             this->streamBuffer.ungetChar();
             break;
@@ -43,25 +44,25 @@ TokenString::TokenString(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::TOKEN_STRING;
 }
 
-int TokenString::retrieve(std::string& str, int &count)
+bool TokenString::retrieve(std::string& str, int &count)
 {
     int c = 0;
-    int result = 0;
+    bool result = false;
     count = 0;
 
     c = this->streamBuffer.getChar();
 
     if(c != '"'){
-        result = -1;
-        this->error("retrieveString; syntax error; '\"' expected");
+        result = false;
+        this->error("TokenString::retrieve; syntax error; '\"' expected");
         return result;
     }
 
     while((c = this->streamBuffer.getChar()) != '"'){
 
         if(c == -1){
-            result = -1;
-            this->error("retrieveString; unexpected end of file");
+            result = false;
+            this->error("TokenString::retrieve; unexpected end of file");
             return result;
         }
 
@@ -84,10 +85,14 @@ int TokenString::retrieve(std::string& str, int &count)
         }
 
         if(str.length() >= MAX_STRING_LENGHT){
-            result = -1;
-            this->error("retrieveString; string too long");
+            result = false;
+            this->error("TokenString::retrieve; string too long");
             return result;
         }
+    }
+
+    if(str.length() > 0){
+        result = true;
     }
 
     return result;
@@ -99,73 +104,106 @@ TokenCoordinate::TokenCoordinate(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::TOKEN_COORDINATE;
 }
 
-int TokenCoordinate::retrieve(int &x, int &y, int &z)
+bool TokenCoordinate::retrieve(int &x, int &y, int &z)
 {
-    int result = 0;
+    bool result = false;
 
     if(this->streamBuffer.getChar() != '['){
-        result = -1;
-        this->error("retrieveCoordinate; syntax error; '[' expected");
+        result = false;
+        this->error("TokenCoordinate::retrieve; syntax error; '[' expected");
         return result;
     }
 
     int number = 0;
     int sign = 1;
 
-    this->retrieveSign(sign);
-    this->retrieve(number);
+    if(!this->retrieveSign(sign)){
+        result = false;
+        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        return result;
+    }
+
+    if(!this->retrieve(number)){
+        result = false;
+        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        return result;
+    }
     x = number * sign;
 
+
     if(this->streamBuffer.getChar() != ','){
-        result = -1;
-        this->error("retrieveCoordinate; syntax error; ',' expected");
+        result = false;
+        this->error("TokenCoordinate::retrieve; syntax error; ',' expected");
         return result;
     }
 
-    this->retrieveSign(sign);
-    this->retrieve(number);
+    if(!this->retrieveSign(sign)){
+        result = false;
+        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        return false;
+    }
+
+    if(!this->retrieve(number)){
+        result = false;
+        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        return result;
+    }
     y = number * sign;
 
+
     if(this->streamBuffer.getChar() != ','){
-        result = -1;
-        this->error("retrieveCoordinate; syntax error; ',' expected");
+        result = false;
+        this->error("TokenCoordinate::retrieve; syntax error; ',' expected");
         return result;
     }
 
-    this->retrieveSign(sign);
-    this->retrieve(number);
+
+    if(!this->retrieveSign(sign)){
+        result = false;
+        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        return result;
+    }
+
+    if(!this->retrieve(number)){
+        result = false;
+        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        return result;
+    }
     z = number * sign;
 
+
     if(this->streamBuffer.getChar() != ']'){
-        result = -1;
-        this->error("retrieveCoordinate; syntax error; ']' expected");
+        result = false;
+        this->error("TokenCoordinate::retrieve; syntax error; ']' expected");
         return result;
     }
 
     return result;
 }
 
-int TokenCoordinate::retrieveSign(int &sign)
+bool TokenCoordinate::retrieveSign(int &sign)
 {
-    int result = 0;
+    bool result = false;
     int c = this->streamBuffer.getChar();
 
     if(c == -1){
-        result = -1;
-        this->error("retrieveSign; unexpected end of file");
+        result = false;
+        this->error("TokenCoordinate::retrieveSign; unexpected end of file");
     }
 
     if ( std::isdigit(c) ){
+      result = true;
       sign = 1;
       this->streamBuffer.ungetChar();
     }else{
 
       if ( c != '-' ){
-        result = -1;
-        this->error("retrieveSign; syntax error; '-' expected");
+        result = false;
+        this->error("TokenCoordinate::retrieveSign; syntax error; '-' expected");
         return result;
       }
 
+      result = true;
       sign = -1;
     }
 
@@ -178,19 +216,19 @@ TokenIdentifier::TokenIdentifier(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::TOKEN_IDENTIFIER;
 }
 
-int TokenIdentifier::retrieve(std::string& identifier)
+bool TokenIdentifier::retrieve(std::string& identifier)
 {
     int c = 0;
-    int result = 0;
+    bool result = false;
 
     while(true){
         c = this->streamBuffer.getChar();
 
         if (identifier.length() >= MAX_IDENTIFIER_LENGHT )
-            this->error("identifier too long");
+            this->error("TokenIdentifier::retrieve; identifier too long");
 
         if ( c == -1 ){
-            result = -1;
+            result = false;
             break;
         }
 
@@ -198,9 +236,13 @@ int TokenIdentifier::retrieve(std::string& identifier)
             identifier.push_back(c);
         }else{
             this->streamBuffer.ungetChar();
-            result = -1;
+            result = false;
             break;
         }
+    }
+
+    if(identifier.length() > 0){
+        result = true;
     }
 
     return result;
@@ -212,10 +254,10 @@ TokenSpecial::TokenSpecial(StreamBuffer& streamBuffer) :
     this->type = ScriptTokenType::TOKEN_SPECIAL;
 }
 
-int TokenSpecial::retrieve(char &special)
+bool TokenSpecial::retrieve(char &special)
 {
     int c = this->streamBuffer.getChar();
-    int result = -1;
+    bool result = false;
 
     if(c == '['){
         special = c;
@@ -223,19 +265,19 @@ int TokenSpecial::retrieve(char &special)
         c = this->streamBuffer.getChar();
 
         if(c == -1){
-            result = 0;
+            result = true;
             return result;
         }
 
         if(!std::isdigit(c) && c != '-'){
             this->streamBuffer.ungetChar();
-            result = 0;
+            result = true;
             return result;
         }
 
         this->streamBuffer.ungetChar();
         this->streamBuffer.ungetChar();
-        result = -1;
+        result = false;
         return result;
     }
 
@@ -257,39 +299,39 @@ int TokenSpecial::retrieve(char &special)
     }
 
     special = c;
-    result = 0;
+    result = true;
     return result;
 }
 
-int TokenSpecial::retrieveRelationalOperator(char &relationalOperator)
+bool TokenSpecial::retrieveRelationalOperator(char &relationalOperator)
 {
     int c = this->streamBuffer.getChar();
-    int result = 0;
+    bool result = false;
 
     if ( c == '<' )
     {
         c = this->streamBuffer.getChar();
 
         if(c == -1){
-            result = 0;
+            result = true;
             return result;
         }
 
         if(c == '='){
             relationalOperator = 'L';
-            result = 0;
+            result = true;
             return result;
         }
 
         if(c == '>'){
             relationalOperator = 'N';
-            result = 0;
+            result = true;
             return result;
         }
 
         relationalOperator = '<';
         this->streamBuffer.ungetChar();
-        result = 0;
+        result = true;
         return result;
     }
 
@@ -298,52 +340,52 @@ int TokenSpecial::retrieveRelationalOperator(char &relationalOperator)
         c = this->streamBuffer.getChar();
 
         if(c == -1){
-            result = 0;
+            result = true;
             return result;
         }
 
         if(c == '='){
             relationalOperator = 'G';
-            result = 0;
+            result = true;
             return result;
         }
 
         relationalOperator = '>';
         this->streamBuffer.ungetChar();
-        result = 0;
+        result = true;
         return result;
     }
 
     if(c == -1){
-        result = 0;
+        result = true;
         return result;
     }
 
-    result = 0;
+    result = true;
     return result;
 }
 
-int TokenSpecial::retrieveSeparator(char &separator)
+bool TokenSpecial::retrieveSeparator(char &separator)
 {
     int c = this->streamBuffer.getChar();
-    int result = 0;
+    bool result = false;
 
     if(c == '-'){
 
         c = this->streamBuffer.getChar();
         if(c == -1){
-            result = -1;
+            result = false;
             return result;
         }
 
         if ( c == '>' ){
             separator = 'I';
-            result = 0;
+            result = true;
             return result;
         }
     }
 
-    result = -1;
+    result = false;
     this->streamBuffer.ungetChar();
     return result;
 }
@@ -354,9 +396,9 @@ TokenBytes::TokenBytes(StreamBuffer &streamBuffer) :
     this->type = ScriptTokenType::TOKEN_BYTES;
 }
 
-int TokenBytes::retrieve(std::vector<uint8_t> &bytes)
+bool TokenBytes::retrieve(std::vector<uint8_t> &bytes)
 {
-    int result = -1;
+    bool result = false;
     int number = 0;
 
     bytes.clear();
@@ -367,10 +409,10 @@ int TokenBytes::retrieve(std::vector<uint8_t> &bytes)
     while(this->streamBuffer.getChar() == '-'){
         this->retrieve(number);
         bytes.emplace_back(number);
-        result = 0;
+        result = true;
     }
 
-    if(result < 0){
+    if(!result){
         bytes.clear();
     }
 
@@ -384,24 +426,23 @@ TokenGenericNumber::TokenGenericNumber(StreamBuffer &streamBuffer) :
     this->type = ScriptTokenType::TOKEN_ENDOFFILE;
 }
 
-int TokenGenericNumber::retrieve(int &number, std::vector<uint8_t> &bytes)
+bool TokenGenericNumber::retrieve(int &number, std::vector<uint8_t> &bytes)
 {
-    int result = -1;
+    bool result = false;
     int number_ = 0;
     int c = 0;
     std::vector<uint8_t> bytes_;
 
-    if(this->tokenNumber.retrieve(number_) >= 0){
+    if(this->tokenNumber.retrieve(number_)){
         number = number_;
         this->type = ScriptTokenType::TOKEN_NUMBER;
-        result = 0;
+        result = true;
     }
 
-    if(result >= 0){
+    if(result){
         c = this->streamBuffer.getChar();
 
         if(c == -1){
-
             return result;
         }
 
@@ -409,12 +450,14 @@ int TokenGenericNumber::retrieve(int &number, std::vector<uint8_t> &bytes)
             this->type = ScriptTokenType::TOKEN_BYTES;
             bytes_.emplace_back(number_);
 
-            if(this->tokenBytes.retrieve(bytes) >= 0){
+            if(this->tokenBytes.retrieve(bytes)){
                 bytes_.insert(bytes_.end(), bytes.begin(), bytes.end());
-                result = 0;
+                result = true;
                 return result;
             }
         }
     }
+
+    this->streamBuffer.ungetChar();
     return result;
 }

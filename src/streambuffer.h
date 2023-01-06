@@ -2,7 +2,6 @@
 #define STREAMBUFFER_H
 
 #include <cstdint>
-#include <iostream>
 
 class StreamBuffer
 {
@@ -10,7 +9,6 @@ public:
     StreamBuffer(){
 
     }
-
 
     virtual int getChar() {
         return 0;
