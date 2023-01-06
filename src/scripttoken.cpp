@@ -22,7 +22,7 @@ bool TokenNumber::retrieve(int& number){
 
         if ( c == -1 ){
             result = false;
-            this->error("TokenNumber::retrieve; unexpected end of file");
+            this->error("unexpected end of file");
             break;
         }
 
@@ -54,7 +54,7 @@ bool TokenString::retrieve(std::string& str, int &count)
 
     if(c != '"'){
         result = false;
-        this->error("TokenString::retrieve; syntax error; '\"' expected");
+        this->error("syntax error; '\"' expected");
         return result;
     }
 
@@ -62,7 +62,7 @@ bool TokenString::retrieve(std::string& str, int &count)
 
         if(c == -1){
             result = false;
-            this->error("TokenString::retrieve; unexpected end of file");
+            this->error("unexpected end of file");
             return result;
         }
 
@@ -86,7 +86,7 @@ bool TokenString::retrieve(std::string& str, int &count)
 
         if(str.length() >= MAX_STRING_LENGHT){
             result = false;
-            this->error("TokenString::retrieve; string too long");
+            this->error("string too long");
             return result;
         }
     }
@@ -110,7 +110,7 @@ bool TokenCoordinate::retrieve(int &x, int &y, int &z)
 
     if(this->streamBuffer.getChar() != '['){
         result = false;
-        this->error("TokenCoordinate::retrieve; syntax error; '[' expected");
+        this->error("syntax error; '[' expected");
         return result;
     }
 
@@ -119,13 +119,13 @@ bool TokenCoordinate::retrieve(int &x, int &y, int &z)
 
     if(!this->retrieveSign(sign)){
         result = false;
-        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        this->error("unexpected end of file");
         return result;
     }
 
     if(!this->retrieve(number)){
         result = false;
-        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        this->error("unexpected end of file");
         return result;
     }
     x = number * sign;
@@ -133,19 +133,19 @@ bool TokenCoordinate::retrieve(int &x, int &y, int &z)
 
     if(this->streamBuffer.getChar() != ','){
         result = false;
-        this->error("TokenCoordinate::retrieve; syntax error; ',' expected");
+        this->error("syntax error; ',' expected");
         return result;
     }
 
     if(!this->retrieveSign(sign)){
         result = false;
-        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        this->error("unexpected end of file");
         return false;
     }
 
     if(!this->retrieve(number)){
         result = false;
-        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        this->error("unexpected end of file");
         return result;
     }
     y = number * sign;
@@ -153,20 +153,20 @@ bool TokenCoordinate::retrieve(int &x, int &y, int &z)
 
     if(this->streamBuffer.getChar() != ','){
         result = false;
-        this->error("TokenCoordinate::retrieve; syntax error; ',' expected");
+        this->error("syntax error; ',' expected");
         return result;
     }
 
 
     if(!this->retrieveSign(sign)){
         result = false;
-        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        this->error("unexpected end of file");
         return result;
     }
 
     if(!this->retrieve(number)){
         result = false;
-        this->error("TokenCoordinate::retrieve; unexpected end of file");
+        this->error("unexpected end of file");
         return result;
     }
     z = number * sign;
@@ -174,7 +174,7 @@ bool TokenCoordinate::retrieve(int &x, int &y, int &z)
 
     if(this->streamBuffer.getChar() != ']'){
         result = false;
-        this->error("TokenCoordinate::retrieve; syntax error; ']' expected");
+        this->error("syntax error; ']' expected");
         return result;
     }
 
@@ -188,7 +188,7 @@ bool TokenCoordinate::retrieveSign(int &sign)
 
     if(c == -1){
         result = false;
-        this->error("TokenCoordinate::retrieveSign; unexpected end of file");
+        this->error("unexpected end of file");
     }
 
     if ( std::isdigit(c) ){
@@ -199,7 +199,7 @@ bool TokenCoordinate::retrieveSign(int &sign)
 
       if ( c != '-' ){
         result = false;
-        this->error("TokenCoordinate::retrieveSign; syntax error; '-' expected");
+        this->error("syntax error; '-' expected");
         return result;
       }
 
@@ -225,7 +225,7 @@ bool TokenIdentifier::retrieve(std::string& identifier)
         c = this->streamBuffer.getChar();
 
         if (identifier.length() >= MAX_IDENTIFIER_LENGHT )
-            this->error("TokenIdentifier::retrieve; identifier too long");
+            this->error("identifier too long");
 
         if ( c == -1 ){
             result = false;

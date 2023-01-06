@@ -25,40 +25,42 @@ class ReadScriptFile
 {
 public:
     ReadScriptFile();
-
     ~ReadScriptFile();
+
+    void open(const std::string &fileNameStr);
+    void close();
+
+    void nextToken();
+
+    void error(const std::string &Text);
+    void printError(const std::string &err);
 
     void readSymbol(char);
     std::string readString();
     char readSpecial();
     int readNumber();
-    std::string readIdentifier(void);
+    std::string readIdentifier();
     void readCoordinate(int &x, int &y, int &z);
-    uint8_t *readBytesequence(void);
-
-    void nextToken();
+    std::vector<uint8_t> readBytesequence();
 
     std::string getString();
     uint8_t getSpecial();
     int getNumber();
     std::string getIdentifier();
     void getCoordinate(int &x, int &y, int &z);
-    uint8_t *getBytesequence();
+    std::vector<uint8_t> getBytesequence();
 
-    void open(const std::string &fileNameStr);
-    void close();
-    void closeAll();
-
-    void error(const std::string &Text);
-    void printError(const std::string &err);
 private:
 
     bool retrieveFilename(std::string &filename);
+    bool retrieveTokens();
 
-    void internalClose(int fileIndex = 0);
-
+    bool skipChars();
     bool skipLine();
     bool skipSpace();
+
+    void closeAll();
+    void internalClose(int fileIndex = 0);
 
 public:
     ScriptTokenType Token;

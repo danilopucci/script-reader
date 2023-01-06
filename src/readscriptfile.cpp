@@ -113,17 +113,17 @@ void ReadScriptFile::getCoordinate(int &x,int &y,int &z)
   z = this->CoordZ;
 }
 
-uint8_t* ReadScriptFile::readBytesequence(void)
+std::vector<uint8_t> ReadScriptFile::readBytesequence()
 {
   this->nextToken();
   return this->getBytesequence();
 }
 
-uint8_t* ReadScriptFile::getBytesequence()
+std::vector<uint8_t> ReadScriptFile::getBytesequence()
 {
   if ( this->Token != TOKEN_BYTES )
     this->error("byte-sequence expected");
-  return this->Bytes.data();
+  return this->Bytes;
 }
 
 void ReadScriptFile::open(const std::string& name)
@@ -173,6 +173,98 @@ bool ReadScriptFile::retrieveFilename(std::string &filename)
     return result;
 }
 
+bool ReadScriptFile::retrieveTokens()
+{
+    bool result = false;
+    int c = this->scriptFile->nextChar();
+    ScriptTokenPtr token;
+
+    // retrieve identifier
+    if ( std::isalpha(c) )
+    {
+        token = ScriptTokenPtr(new TokenIdentifier(*this->scriptFile));
+        if(token->retrieve(this->String)){
+            this->Token = token->type;
+            result = true;
+            return result;
+        }
+    }
+
+    // retrieve Number or ByteSequence
+    if ( std::isdigit(c) )
+    {
+        token = ScriptTokenPtr(new TokenGenericNumber(*this->scriptFile));
+        if(token->retrieve(this->Number, this->Bytes)){
+            this->Token = token->type;
+            result = true;
+            return result;
+        }
+    }
+
+    // retrieve string
+    if(c == '"')
+    {
+        int count = 0;
+        token = ScriptTokenPtr(new TokenString(*this->scriptFile));
+        if(token->retrieve(this->String, count)){
+            this->scriptFile->addLineCount(count);
+            this->Token = token->type;
+            result = true;
+            return result;
+        }
+    }
+
+    {
+        // If reaches here, it is special
+        token = ScriptTokenPtr(new TokenSpecial(*this->scriptFile));
+        if(token->retrieve(this->Special)){
+            this->Token = token->type;
+            result = true;
+            return result;
+        }
+    }
+
+    {
+        // If reaches here, can only be coordinate
+        token = ScriptTokenPtr(new TokenCoordinate(*this->scriptFile));
+        if(token->retrieve(this->CoordX, this->CoordY, this->CoordZ)){
+            this->Token = token->type;
+            result = true;
+            return result;
+        }
+    }
+    return result;
+}
+
+bool ReadScriptFile::skipChars()
+{
+    bool result = false;
+    int c = this->scriptFile->nextChar();
+
+    // skip and push line count
+    if ( c == '\n' )
+    {
+        this->scriptFile->getChar();
+        this->scriptFile->pushLineCount();
+        result = true;
+        return result;
+    }
+
+    // skip spaces
+    if(std::isspace(c)){
+        this->skipSpace();
+        result = true;
+        return result;
+    }
+
+    // skip comment
+    if ( c == '#' )
+    {
+        this->skipLine();
+        result = true;
+        return result;
+    }
+}
 
 bool ReadScriptFile::skipSpace()
 {
@@ -219,14 +311,13 @@ void ReadScriptFile::nextToken()
   }
 
   int c = 0;
-  ScriptTokenPtr token;
-
   this->Number = 0;
 
   this->Bytes.clear();
   this->String.clear();
 
   try {
+
       while (true)
       {
           c = this->scriptFile->nextChar();
@@ -241,24 +332,7 @@ void ReadScriptFile::nextToken()
               return;
           }
 
-          // skip and push line count
-          if ( c == '\n' )
-          {
-              this->scriptFile->getChar();
-              this->scriptFile->pushLineCount();
-              continue;
-          }
-
-          // skip spaces
-          if(std::isspace(c)){
-              this->skipSpace();
-              continue;
-          }
-
-          // skip comment
-          if ( c == '#' )
-          {
-              this->skipLine();
+          if(this->skipChars()){
               continue;
           }
 
@@ -273,59 +347,13 @@ void ReadScriptFile::nextToken()
               return;
           }
 
-          // retrieve identifier
-          if ( std::isalpha(c) )
-          {
-              token = ScriptTokenPtr(new TokenIdentifier(*this->scriptFile));
-              if(token->retrieve(this->String)){
-                  this->Token = token->type;
-                  return;
-              }
+          if(this->retrieveTokens()){
+              return;
           }
-
-          // retrieve Number or ByteSequence
-          if ( std::isdigit(c) )
-          {
-              token = ScriptTokenPtr(new TokenGenericNumber(*this->scriptFile));
-              if(token->retrieve(this->Number, this->Bytes)){
-                  this->Token = token->type;
-                  return;
-              }
-          }
-
-          // retrieve string
-          if(c == '"')
-          {
-              int count = 0;
-              token = ScriptTokenPtr(new TokenString(*this->scriptFile));
-              if(token->retrieve(this->String, count)){
-                  this->scriptFile->addLineCount(count);
-                  this->Token = token->type;
-                  return;
-              }
-          }
-
-          {
-              // If reaches here, it is special
-              token = ScriptTokenPtr(new TokenSpecial(*this->scriptFile));
-              if(token->retrieve(this->Special)){
-                  this->Token = token->type;
-                  return;
-              }
-          }
-
-          {
-              // If reaches here, can only be coordinate
-              token = ScriptTokenPtr(new TokenCoordinate(*this->scriptFile));
-              if(token->retrieve(this->CoordX, this->CoordY, this->CoordZ)){
-                  this->Token = token->type;
-                  return;
-              }
-          }
-
       }
 
-  }  catch (const std::exception& e) {
+  }
+  catch (const std::exception& e) {
      this->error(e.what());
   }
 
