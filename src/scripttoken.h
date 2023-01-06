@@ -3,14 +3,18 @@
 
 #include "streambuffer.h"
 
+#include <stdexcept>
+#include <vector>
+#include <string>
+
 enum ScriptTokenType{
-    aENDOFFILE        = 0,
-    aIDENTIFIER       = 1,
-    aNUMBER           = 2,
-    aSTRING           = 3,
-    aBYTES            = 4,
-    aCOORDINATE       = 5,
-    aSPECIAL          = 6
+    TOKEN_ENDOFFILE        = 0,
+    TOKEN_IDENTIFIER       = 1,
+    TOKEN_NUMBER           = 2,
+    TOKEN_STRING           = 3,
+    TOKEN_BYTES            = 4,
+    TOKEN_COORDINATE       = 5,
+    TOKEN_SPECIAL          = 6
 };
 
 
@@ -24,6 +28,8 @@ public:
     virtual int retrieve(int &x, int &y, int &z){ return 0; };
     virtual int retrieve(std::string& identifier){ return 0; }
     virtual int retrieve(char &special){ return 0; }
+    virtual int retrieve(std::vector<uint8_t> &bytes){ return 0; }
+    virtual int retrieve(int &number, std::vector<uint8_t> &bytes){ return 0; }
 
     void error(const std::string& err){ throw std::logic_error(err); }
 
@@ -90,6 +96,29 @@ public:
 private:
     int retrieveRelationalOperator(char &relationalOperator);
     int retrieveSeparator(char &separator);
+};
+
+
+class TokenBytes : public TokenNumber {
+
+public:
+    TokenBytes(StreamBuffer &streamBuffer);
+
+    int retrieve(std::vector<uint8_t> &bytes);
+    int retrieve(int &number) { return TokenNumber::retrieve(number); }
+};
+
+
+class TokenGenericNumber : public ScriptToken {
+
+public:
+    TokenGenericNumber(StreamBuffer &streamBuffer);
+
+    int retrieve(int &number, std::vector<uint8_t> &bytes);
+
+private:
+    TokenNumber tokenNumber;
+    TokenBytes tokenBytes;
 };
 
 #endif // SCRIPTTOKEN_H

@@ -8,7 +8,7 @@ ScriptToken::ScriptToken(StreamBuffer& streamBuffer) :
 TokenNumber::TokenNumber(StreamBuffer& streamBuffer) :
     ScriptToken(streamBuffer)
 {
-    this->type = ScriptTokenType::aNUMBER;
+    this->type = ScriptTokenType::TOKEN_NUMBER;
 }
 
 int TokenNumber::retrieve(int& number){
@@ -40,7 +40,7 @@ int TokenNumber::retrieve(int& number){
 TokenString::TokenString(StreamBuffer& streamBuffer) :
     ScriptToken(streamBuffer)
 {
-    this->type = ScriptTokenType::aSTRING;
+    this->type = ScriptTokenType::TOKEN_STRING;
 }
 
 int TokenString::retrieve(std::string& str, int &count)
@@ -96,7 +96,7 @@ int TokenString::retrieve(std::string& str, int &count)
 TokenCoordinate::TokenCoordinate(StreamBuffer& streamBuffer) :
     TokenNumber(streamBuffer)
 {
-    this->type = ScriptTokenType::aCOORDINATE;
+    this->type = ScriptTokenType::TOKEN_COORDINATE;
 }
 
 int TokenCoordinate::retrieve(int &x, int &y, int &z)
@@ -175,7 +175,7 @@ int TokenCoordinate::retrieveSign(int &sign)
 TokenIdentifier::TokenIdentifier(StreamBuffer& streamBuffer) :
     ScriptToken(streamBuffer)
 {
-    this->type = ScriptTokenType::aIDENTIFIER;
+    this->type = ScriptTokenType::TOKEN_IDENTIFIER;
 }
 
 int TokenIdentifier::retrieve(std::string& identifier)
@@ -209,7 +209,7 @@ int TokenIdentifier::retrieve(std::string& identifier)
 TokenSpecial::TokenSpecial(StreamBuffer& streamBuffer) :
     ScriptToken(streamBuffer)
 {
-    this->type = ScriptTokenType::aSPECIAL;
+    this->type = ScriptTokenType::TOKEN_SPECIAL;
 }
 
 int TokenSpecial::retrieve(char &special)
@@ -345,5 +345,76 @@ int TokenSpecial::retrieveSeparator(char &separator)
 
     result = -1;
     this->streamBuffer.ungetChar();
+    return result;
+}
+
+TokenBytes::TokenBytes(StreamBuffer &streamBuffer) :
+    TokenNumber(streamBuffer)
+{
+    this->type = ScriptTokenType::TOKEN_BYTES;
+}
+
+int TokenBytes::retrieve(std::vector<uint8_t> &bytes)
+{
+    int result = -1;
+    int number = 0;
+
+    bytes.clear();
+
+    this->retrieve(number);
+    bytes.emplace_back(number);
+
+    while(this->streamBuffer.getChar() == '-'){
+        this->retrieve(number);
+        bytes.emplace_back(number);
+        result = 0;
+    }
+
+    if(result < 0){
+        bytes.clear();
+    }
+
+    this->streamBuffer.ungetChar();
+    return result;
+}
+
+TokenGenericNumber::TokenGenericNumber(StreamBuffer &streamBuffer) :
+    tokenBytes(streamBuffer), tokenNumber(streamBuffer), ScriptToken(streamBuffer)
+{
+    this->type = ScriptTokenType::TOKEN_ENDOFFILE;
+}
+
+int TokenGenericNumber::retrieve(int &number, std::vector<uint8_t> &bytes)
+{
+    int result = -1;
+    int number_ = 0;
+    int c = 0;
+    std::vector<uint8_t> bytes_;
+
+    if(this->tokenNumber.retrieve(number_) >= 0){
+        number = number_;
+        this->type = ScriptTokenType::TOKEN_NUMBER;
+        result = 0;
+    }
+
+    if(result >= 0){
+        c = this->streamBuffer.getChar();
+
+        if(c == -1){
+
+            return result;
+        }
+
+        if(c == '-'){
+            this->type = ScriptTokenType::TOKEN_BYTES;
+            bytes_.emplace_back(number_);
+
+            if(this->tokenBytes.retrieve(bytes) >= 0){
+                bytes_.insert(bytes_.end(), bytes.begin(), bytes.end());
+                result = 0;
+                return result;
+            }
+        }
+    }
     return result;
 }
