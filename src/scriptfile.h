@@ -9,10 +9,9 @@ class ScriptFile : public StreamBuffer
 {
 public:
     ScriptFile();
-    ScriptFile(const std::string& fileNamePath);
     ~ScriptFile();
 
-    bool open();
+    bool open(const std::string& fileNamePath);
     bool close();
 
     int getChar();

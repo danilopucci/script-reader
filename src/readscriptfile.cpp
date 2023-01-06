@@ -152,9 +152,7 @@ void ReadScriptFile::open(const std::string& name)
       fileName = this->scriptFile->getFilePath() + fileName;
   }
 
-  this->Files[this->RecursionDepth] = new ScriptFile(fileName);
-
-  if(!this->Files[this->RecursionDepth]->open())
+  if(!this->Files[this->RecursionDepth].open(fileName))
   {
     this->printError("TReadScriptFile::open: Kann Datei " + fileName + " nicht ");
     this->error(fileName);
@@ -164,7 +162,7 @@ void ReadScriptFile::open(const std::string& name)
     this->error("Cannot open script-file");
   }
 
-  this->scriptFile = this->Files[this->RecursionDepth];
+  this->scriptFile = &this->Files[this->RecursionDepth];
 }
 
 bool ReadScriptFile::retrieveIdentifier()
@@ -402,14 +400,13 @@ void ReadScriptFile::printError(const std::string &err)
 void ReadScriptFile::internalClose(int fileIndex)
 {
     int index = fileIndex ? fileIndex : this->RecursionDepth;
-    this->Files[index]->resetLineCount();
 
-    if(!this->Files[index]->close()){
+    if(!this->Files[index].close()){
         this->printError("TReadScriptFile::close: Fehler %d beim Schlie");
     }
 
     --this->RecursionDepth;
-    this->scriptFile = this->Files[this->RecursionDepth];
+    this->scriptFile = &this->Files[this->RecursionDepth];
 }
 
 void ReadScriptFile::close()

@@ -71,19 +71,21 @@ public:
     TOKEN Token;
     char Special;
     int RecursionDepth;
+
     std::vector<uint8_t> Bytes;
+
     std::string String;
+
     int Number;
+
     int CoordX;
     int CoordY;
     int CoordZ;
 
     char ErrorString[100];
 
-    ScriptFile* Files[MAX_RECURSION_DEPTH];
+    ScriptFile Files[MAX_RECURSION_DEPTH];
     ScriptFile *scriptFile;
-
-
 };
 
 

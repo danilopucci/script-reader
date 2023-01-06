@@ -2,42 +2,38 @@
 
 ScriptFile::ScriptFile()
 {
-    this->lineCount = 1;
-}
-
-ScriptFile::ScriptFile(const std::string& fileNamePath)
-{
-    this->lineCount = 1;
-    this->fileNamePath = fileNamePath;
-
-    file = new std::fstream(this->fileNamePath, std::ios_base::in | std::ios_base::binary);
-
-    this->setFileName();
-    this->setFilePath();
+    this->file = new std::fstream();
+    this->lineCount = 0;
 }
 
 ScriptFile::~ScriptFile()
 {
-    this->lineCount = 1;
-    this->fileNamePath = "";
-    this->fileName = "";
     delete file;
 }
 
-bool ScriptFile::open()
+bool ScriptFile::open(const std::string &fileNamePath)
 {
+    this->fileNamePath = fileNamePath;
+    this->setFileName();
+    this->setFilePath();
+    this->lineCount = 1;
+
     if(this->file != nullptr)
     {
-        this->file = new std::fstream(this->fileNamePath, std::ios_base::in | std::ios_base::binary);
-        return true;
+        this->file->open(this->fileNamePath, std::ios_base::in | std::ios_base::binary);
+        return this->file->is_open();
     }
     return false;
 }
 
 bool ScriptFile::close()
 {
+    this->fileNamePath = "";
+    this->fileName = "";
+    this->lineCount = 0;
+
     this->file->close();
-    return true;
+    return !this->file->is_open();
 }
 
 int ScriptFile::getChar()
