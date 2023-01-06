@@ -337,7 +337,6 @@ void ReadScriptFile::error(const std::string &err)
   snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", this->scriptFile->getFileName().c_str(), this->scriptFile->getLineCount(), err.c_str());
 
   this->closeAll();
-  this->printError(this->ErrorString);
 
   throw std::logic_error(this->ErrorString);
 }
