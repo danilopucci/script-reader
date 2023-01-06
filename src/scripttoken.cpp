@@ -106,7 +106,7 @@ TokenCoordinate::TokenCoordinate(StreamBuffer& streamBuffer) :
 
 bool TokenCoordinate::retrieve(int &x, int &y, int &z)
 {
-    bool result = false;
+    bool result = true;
 
     if(this->streamBuffer.getChar() != '['){
         result = false;

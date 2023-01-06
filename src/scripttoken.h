@@ -6,6 +6,10 @@
 #include <stdexcept>
 #include <vector>
 #include <string>
+#include <memory>
+
+class ScriptToken;
+typedef std::shared_ptr<ScriptToken> ScriptTokenPtr;
 
 enum ScriptTokenType{
     TOKEN_ENDOFFILE        = 0,

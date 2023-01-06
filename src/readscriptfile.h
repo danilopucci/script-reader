@@ -7,6 +7,7 @@
 #include <fstream>
 
 #include "scriptfile.h"
+#include "scripttoken.h"
 
 std::string strLower(std::string a1);
 
@@ -51,43 +52,34 @@ public:
     void error(const std::string &Text);
     void printError(const std::string &err);
 private:
-    void setToken(TOKEN token);
 
-    bool retrieveIdentifier();
-    bool retrieveNumber();
-    bool retrieveNumberOrBytes();
-    bool retrieveCoordinate();
-
-    bool retrieveString();
+    bool retrieveFilename(std::string &filename);
 
     void internalClose(int fileIndex = 0);
 
-    void skipLine();
-    void skipSpace();
+    bool skipLine();
+    bool skipSpace();
+
 public:
-//private:
+    ScriptTokenType Token;
+
+private:
     static const int MAX_RECURSION_DEPTH = 3;
-
-    TOKEN Token;
-    char Special;
-    int RecursionDepth;
-
-    std::vector<uint8_t> Bytes;
-
-    std::string String;
-
-    int Number;
-
-    int CoordX;
-    int CoordY;
-    int CoordZ;
-
-    char ErrorString[100];
 
     ScriptFile Files[MAX_RECURSION_DEPTH];
     ScriptFile *scriptFile;
+
+    char ErrorString[100];
+
+    int RecursionDepth;
+
+    char Special;
+    std::vector<uint8_t> Bytes;
+    std::string String;
+    int Number;
+    int CoordX;
+    int CoordY;
+    int CoordZ;
 };
-
-
 
 #endif // READSCRIPTFILE_H
