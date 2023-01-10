@@ -39,6 +39,34 @@ It is only necessary to include readscriptfile.h
 * store the item data to your code and cycle to ```ReadScriptFile::nextToken()``` until it reaches End-of-file
 * close the file by using ```ReadScriptFile::close()```
 
+### Example NPC (building and running on Linux)
+
+#### Building 
+
+* clone the project
+```console
+$ git clone https://github.com/danilopucci/script-reader.git 
+```
+* navigate to project root directory
+```console
+$ cd script-reader 
+```
+* prepare cmake
+```console
+$ cmake . && cd examples
+```
+* build example-npc
+```console
+$ cmake --build . --target example-npc 
+```
+
+#### Running
+
+* this will read "alice.npc" file 
+```console
+$ ./example-npc $(pwd)
+```
+
 ##### Note
 It throws exception in case of error while reading script file, so it may be useful to operate inside a try-catch block
 

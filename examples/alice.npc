@@ -4,11 +4,7 @@
 Name = "Alice"
 Sex = female
 Type = 2
-Outfit = (32,0-0-0-0)
+Outfit = (32,10-9-8-7)
 Coordinate = [1032,1033,6]
 WalkRadius = 14
 Speed = 10
-
-Behaviour = {
-Say -> "Hello"
-}

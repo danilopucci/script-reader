@@ -5,7 +5,7 @@
 int main(int argc, char* argv[])
 {
     //read current dir
-    std::string currentDir(argv[0]);
+    std::string currentDir(argv[1]);
     std::string npcFilename = currentDir + "/alice.npc";
 
     std::cout << "NPC with " << npcFilename << " is going to be loaded" << std::endl;
@@ -81,11 +81,11 @@ int main(int argc, char* argv[])
 
                 script->readSymbol(')');
             }
-            else if ( !identifier.compare("home") )
+            else if ( !identifier.compare("coordinate") )
             {
                 script->readCoordinate(posx, posy, posz);
             }
-            else if ( !identifier.compare("radius") ){
+            else if ( !identifier.compare("walkradius") ){
                 WalkRadius = script->readNumber();
             }
             else if ( !identifier.compare("speed") )
@@ -106,21 +106,9 @@ int main(int argc, char* argv[])
         std::cout << "Sex is " << Sex << " 1 = male, 2 = female" << std::endl;
         std::cout << "Type is " << Type << std::endl;
         std::cout << "OutfitID is " << outfitId << std::endl;
-        std::cout << "Coordinate is " << posx << " ;" << posy << " ;" << posz << std::endl;
+        std::cout << "Coordinate is " << posx << "; " << posy << "; " << posz << std::endl;
         std::cout << "WalkRadius is " << WalkRadius << std::endl;
         std::cout << "Speed is " << Speed << std::endl;
     }
     return 0;
 }
-
-
-/*
-
-Name = "Alice"
-Sex = female
-Type = 2
-Outfit = (32,0-0-0-0)
-Coordinate = [1032,1033,6]
-WalkRadius = 14
-Speed = 10
-*/

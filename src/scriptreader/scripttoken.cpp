@@ -484,6 +484,7 @@ bool TokenGenericNumber::retrieve(int &number, std::vector<uint8_t> &bytes)
 
             if(this->tokenBytes.retrieve(bytes)){
                 bytes_.insert(bytes_.end(), bytes.begin(), bytes.end());
+                bytes = bytes_;
                 result = true;
                 return result;
             }
