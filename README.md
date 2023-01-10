@@ -18,7 +18,10 @@ The file extensions which it can read:
 
 ### Adding to project
 
-* add the scriptreader folder to your CMake project as a library:
+* simple copy-and-paste the scriptreader folder to your project 
+
+OR
+* add to your CMake project as a library:
     ```
     add_subdirectory(src/scriptreader)
     target_link_libraries(script-reader PRIVATE scriptreader)
@@ -28,7 +31,7 @@ The file extensions which it can read:
 
 It is only necessary to include readscriptfile.h
 
-* open the file by using ```ReadScriptFile::open(myfile.npc)```
+* open the file by using ```ReadScriptFile::open("myfile.npc")```
 * make a call to ```ReadScriptFile::nextToken()```
 * get the read toke type (Identifier, Number, String, Bytes, Coordinate or Special)
 * read the token data by calling ```ReadScriptFile::readIdentifier()``` or ```ReadScriptFile::readNumber()``` etc
@@ -37,5 +40,5 @@ It is only necessary to include readscriptfile.h
 * close the file by using ```ReadScriptFile::close()```
 
 ##### Note
-It throws exception in case of error on script file, so it may be useful to operate with try-catch 
+It throws exception in case of error while reading script file, so it may be useful to operate inside a try-catch block
 
