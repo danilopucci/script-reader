@@ -104,7 +104,7 @@ private:
     ScriptFile Files[MAX_RECURSION_DEPTH];
     ScriptFile *scriptFile;
 
-    char ErrorString[100];
+    char ErrorString[256];
 
     int RecursionDepth;
 

@@ -397,7 +397,9 @@ void ReadScriptFile::nextToken()
 
 void ReadScriptFile::error(const std::string &err)
 {
-  snprintf(this->ErrorString, 0x64u, "error in script-file \"%s\", line %d: %s", this->scriptFile->getFileName().c_str(), this->scriptFile->getLineCount(), err.c_str());
+  if(this->scriptFile != nullptr){
+    snprintf(this->ErrorString, 256, "error in script-file \"%s\", line %d: %s \n", this->scriptFile->getFileName().c_str(), this->scriptFile->getLineCount(), err.c_str());
+  }
 
   this->closeAll();
 
