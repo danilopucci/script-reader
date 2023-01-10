@@ -53,7 +53,7 @@ $ cd script-reader
 ```
 * prepare cmake
 ```console
-$ cmake . && cd examples
+$ cmake .
 ```
 * build example-npc
 ```console
