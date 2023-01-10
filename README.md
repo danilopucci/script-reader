@@ -64,7 +64,7 @@ $ cmake --build . --target example-npc
 
 * this will read "alice.npc" file 
 ```console
-$ ./example-npc $(pwd)
+$ ./examples/example-npc $(pwd)
 ```
 
 ##### Note
